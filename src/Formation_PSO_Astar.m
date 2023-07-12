@@ -27,24 +27,21 @@ backstep_when_jammed = 1.2;
 
 
 % The position of the destination
-dest_x = 165;
-dest_y = 190;
+dest_x = 300;
+dest_y = 200;
 
-checkpoints = [300, 20;
-               dest_x, dest_y;];
+checkpoints = [dest_x, dest_y;];
 checkpoint_index = 1;
-checkpoint_threshold = 10; % Determines how close the centroid must be to complete a checkpoint
+checkpoint_threshold = 20; % Determines how close the centroid must be to complete a checkpoint
 
 % The position of the obstacle
 obs_centers = [
-    60, 45;
-    120, 40;
+    120, 60;
     170, 100
-    230, 40]; % Coordinates of multiple obstacle centers
+    230, 60]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-    30;
-    30;
+    40;
     30;
     30]; % Radii of multiple obstacles
 
@@ -81,7 +78,7 @@ global_best_loc = [0,0];
 
 % PSO Constants
 goal_w = 1;
-obs_w = 120; % @65-80 for log scale
+obs_w = 80; % @65-80 for log scale
 curr_vel_w = 0.11;
 c1 = 0.07;
 c2 = 0.13;
@@ -207,7 +204,7 @@ for k=1:max_iter
     end
 
     %Destination
-    for c=1:length(checkpoints)
+    for c=1:size(checkpoints)
         dest_x = checkpoints(c, 1);
         dest_y = checkpoints(c, 2);
         if c < checkpoint_index
@@ -241,7 +238,7 @@ for k=1:max_iter
     hold on;
        
     %Destination
-    for c=1:length(checkpoints)
+    for c=1:size(checkpoints)
         dest_x = checkpoints(c, 1);
         dest_y = checkpoints(c, 2);
         if c < checkpoint_index
@@ -420,6 +417,14 @@ for k=1:max_iter
             global_best_value = 10000;
             personal_best_values = ones(swarm_size) * 10000;
             speed(i,:) = -prev_speed(i,:) * backstep_when_jammed;
+
+            % Recalulate path
+            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs);
+            if size(path) > 0
+                checkpoints = path;
+                checkpoint_index = 1;
+            end
+            
         end
 
         % Update Agent positions
