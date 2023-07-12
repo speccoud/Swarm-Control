@@ -33,7 +33,6 @@ dest_y = 100;
 checkpoints = [130, 0;
                dest_x, dest_y;];
 checkpoint_index = 1;
-avg_dist_to_checkpoint = 100;
 
 % The position of the obstacle
 obs_x = 50;
@@ -115,8 +114,7 @@ for c=1:length(checkpoints)
         fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
     else
         fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
-    end
-    
+    end 
 end
 % fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
 hold off
@@ -281,12 +279,6 @@ for k=1:max_iter
     hold off;
 
     axis equal;
-
-    % Calculate the distances between each node and the destination
-    distances = vecnorm(swarm - repmat([checkpoints(checkpoint_index, 1), checkpoints(checkpoint_index, 2)], swarm_size, 1), 2, 2);
-
-    % Find the index of the node with the minimum distance
-    [~, closest_node_index] = min(distances);
 
     %--- Controller ---
     for i=1:swarm_size

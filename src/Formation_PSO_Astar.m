@@ -30,6 +30,11 @@ backstep_when_jammed = 1.2;
 dest_x = 165;
 dest_y = 190;
 
+checkpoints = [300, 20;
+               dest_x, dest_y;];
+checkpoint_index = 1;
+checkpoint_threshold = 10; % Determines how close the centroid must be to complete a checkpoint
+
 % The position of the obstacle
 obs_centers = [
     60, 45;
@@ -133,8 +138,6 @@ for j = 1:length(obs_centers)
     y = obs_radius * sin(theta) + obs_center(2);
     patch(x, y, 'red', 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 end
-%Destination
-fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
 hold off
 axis equal
 
@@ -203,7 +206,16 @@ for k=1:max_iter
         end
     end
 
-    fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
+    %Destination
+    for c=1:length(checkpoints)
+        dest_x = checkpoints(c, 1);
+        dest_y = checkpoints(c, 2);
+        if c < checkpoint_index
+            fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
+        else
+            fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
+        end 
+    end
 
     figure(3);
     clf; % Clear the figure
@@ -227,9 +239,18 @@ for k=1:max_iter
     end
     
     hold on;
+       
+    %Destination
+    for c=1:length(checkpoints)
+        dest_x = checkpoints(c, 1);
+        dest_y = checkpoints(c, 2);
+        if c < checkpoint_index
+            fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
+        else
+            fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
+        end 
+    end
 
-    % Plot the destination
-    fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
     if size(swarm_obs, 1)
         plot(swarm_obs(:, 1), swarm_obs(:, 2), 'r*');
         obs = findClosestObstacle(swarm(5, :), swarm_obs);
@@ -238,8 +259,6 @@ for k=1:max_iter
 
     plot(global_best_loc(1, 1), global_best_loc(1, 2), 'b*');
 
-
-    
     
     for l = 1:swarm_size
         x_low = swarm(l, 1) - markersize(1)/2;
@@ -294,19 +313,20 @@ for k=1:max_iter
 
     axis equal;
 
-    % Calculate the distances between each node and the destination
-    distances = vecnorm(swarm - repmat([dest_x, dest_y], swarm_size, 1), 2, 2);
-
-    % Find the index of the node with the minimum distance
-    [~, closest_node_index] = min(distances);
-
-
+    % STOP Simulation if reached destination
+    if checkpoint_index > length(checkpoints)
+        fprintf("Destination Reached\n");
+        fprintf("END SIMULATION\n")
+        return;
+    end
 
     %--- Controller ---
     for i=1:swarm_size
         rho_ij=0;
         phi_rij=0;
         rij=0;
+
+        % Gradient Controller
         for j=[1:(i-1),(i+1):swarm_size]
             rij=sqrt((swarm(i,1)-swarm(j,1))^2+(swarm(i,2)-swarm(j,2))^2);
             aij=exp(-alpha*(2^delta-1)*(rij/r0)^v);
@@ -341,185 +361,71 @@ for k=1:max_iter
 
             speed(i,1)=speed(i,1)+rho_ij * nd(1) * travel_speed;
             speed(i,2)=speed(i,2)+rho_ij * nd(2) * travel_speed;
-
-            
-
-            
-            % Wait 25 interations to allow swarm to reach steady state
-            if k >= 25 && false
-                %--- Destination Vector ---
-                
-                destination_vector = [dest_x - swarm(i, 1), dest_y - swarm(i, 2)];
-                dist_vector = norm(destination_vector);
-                destination_speed = destination_vector / norm(destination_vector);
-    
-                if dist_vector > bm
-                    contr_param = am;
-                else
-                    contr_param = am * (dist_vector/bm);
-                end
-    
-                % speed(i, 1) = speed(i, 1) + (destination_speed(1) * contr_param);
-                % speed(i, 2) = speed(i, 2) + (destination_speed(2) * contr_param);
-    
-    
-                %--- Avoidance Vector ---
-                if size(swarm_obs) > 0
-                    
-                    obs = findClosestObstacle(swarm(i, :), swarm_obs);
-                    
-                    swarm_obs_y = obs(2);
-                    swarm_obs_x = obs(1);
-                    avoidance_vec = [swarm_obs_y - swarm(i, 2), -(swarm_obs_x - swarm(i, 1))];
-                    obs_dist = norm(avoidance_vec);
-                    avoid_direction = avoid_directions(i);
-    
-                    % X direction
-                    if obs_dist <= b0 && avoid_direction == 0
-                        if swarm_obs_y - swarm(i, 2) < 0 % Destination is above obstacle
-                            if swarm_obs_x - swarm(i, 1) < 0
-                                avoid_direction = 1;
-                            else
-                                avoid_direction = 1;
-                            end
-                        
-                        else % Destination is below Obstacle
-                            if swarm_obs_x - swarm(i, 1) < 0 
-                                avoid_direction = 1;
-                            else
-                                avoid_direction = 1;
-                            end
-                        end
-                    end
-    
-                    % if obs_dist > b0 && avoid_direction ~= 0
-                    %     avoid_direction = 0;
-                    % end
-                    
-                    if avoid_direction ~= 0
-                        avoidance_vec = avoid_direction * avoidance_vec;
-                        avoid_directions(i) = avoid_direction;
-                    end
-            
-                    % Normalize the avoidance vector
-                    avoidance_speed = avoidance_vec / norm(avoidance_vec);
-    
-            
-                    if obs_dist >= bf && obs_dist <= b0
-                        % fprintf("Avoiding Obstacle\n")
-                        contr_param = a0 * ( obs_dist/(bf-b0) + b0/(b0-bf) );
-                    else
-                        contr_param = 0;
-                    end
-    
-                    if obs_dist < 5
-                        % fprintf("Wall Following\n")
-                        wall_follow = af;
-                    else
-                        wall_follow = 0;
-                    end
-        
-                    % Update the speed with obstacle avoidance
-                    speed(i, :) = speed(i, :) + avoidance_speed * contr_param + avoidance_speed * wall_follow;
-                end
-                
-            end
             
         end
 
+        % PSO Controller
         if k >= 15
             for l=1:swarm_size
-                X = [dest_x,dest_y; swarm(l, 1),swarm(l, 2)];
+                X = [checkpoints(checkpoint_index, 1),checkpoints(checkpoint_index, 2); swarm(l, 1),swarm(l, 2)];
                 distance_to_goal = pdist(X,'euclidean');
                 proximity_to_obstacle = 0;
-    
+                
                 if size(swarm_obs) > 0
                     obs = findClosestObstacle(swarm(l, :), swarm_obs);
                     X = [obs(1),obs(2); swarm(l, 1),swarm(l, 2)];
                     proximity_to_obstacle = pdist(X,'euclidean');
-                    fprintf("Proximity: %f \n", proximity_to_obstacle);
+                    % fprintf("Proximity: %f \n", proximity_to_obstacle);
                     if proximity_to_obstacle > 70
-                        fprintf("In HERE!!!: ");
-                        proximity_to_obstacle = 70;
+                       proximity_to_obstacle = 70;
                     end
                     proximity_to_obstacle = log(proximity_to_obstacle) / log(10);
                 end
-    
-                % Evaluate Agent Fitness
-                   
-               fitness = goal_w * distance_to_goal - obs_w * proximity_to_obstacle;
-               % fprintf("Fitness: %d, ", fitness);
-               % fprintf("Goal: %d, ", goal_w * distance_to_goal);
-               % fprintf("Obs: %d \n", obs_w * proximity_to_obstacle);
-                   
                 
-             
+                % Evaluate Agent Fitness  
+                fitness = goal_w * distance_to_goal - obs_w * proximity_to_obstacle;
+                
+                % Update personal best fitness
                 if fitness < personal_best_values(l)
                     personal_best_values(l) = fitness;
                     personal_best_locs(l, :) = swarm(l, :);
                 end
-    
+                
+                % Update global best fitness
                 if fitness < global_best_value
                     global_best_value = fitness;
                     global_best_loc(1, :) = swarm(l, :);
-                    % fprintf("NEW GLOBAL BEST: %d, ", global_best_value);
-                    % fprintf("Location X: %d, ", global_best_loc(1, 1));
-                    % fprintf("Y: %d\n", global_best_loc(1, 2));
                 end
             end
             
-            
-
-            
-
+            % Velocities with Random values
             % new_velocity_x = curr_vel_w * prev_speed(i, 1) + c1 * rand() * (personal_best_locs(i, 1) - swarm(i, 1)) + c2 * rand() * (global_best_loc(1, 1) - swarm(i, 1));
             % new_velocity_y = curr_vel_w * prev_speed(i, 2) + c1 * rand() * (personal_best_locs(i, 2) - swarm(i, 2)) + c2 * rand() * (global_best_loc(1, 2) - swarm(i, 2));
             
+            % Without random values
             new_velocity_x = curr_vel_w * prev_speed(i, 1) + c1  * (personal_best_locs(i, 1) - swarm(i, 1)) + c2  * (global_best_loc(1, 1) - swarm(i, 1));
             new_velocity_y = curr_vel_w * prev_speed(i, 2) + c1  * (personal_best_locs(i, 2) - swarm(i, 2)) + c2  * (global_best_loc(1, 2) - swarm(i, 2));
             
-           
-            % if abs(new_velocity_x) > 10
-            %     if new_velocity_x > 0
-            %         new_velocity_x = 1;
-            %     else
-            %         new_velocity_x = -1;
-            %     end
-            % end
-            % 
-            % if abs(new_velocity_y) > 10
-            %     if new_velocity_y > 0
-            %         new_velocity_y = 1;
-            %     else
-            %         new_velocity_y = -1;
-            %     end
-            % end
-            % fprintf("New Velocity X: %d, ", new_velocity_x);
-            % fprintf("Y: %d\n", new_velocity_y);
-
+            % Add values to speed
             speed(i, 1) = speed(i, 1) + new_velocity_x;
             speed(i, 2) = speed(i, 2) + new_velocity_y;
         end
 
+        % Agent has no communication links
+        if all(communication_qualities(i, :) < PT) 
+            swarm_obs = [swarm_obs; swarm(i, :)];
+            fprintf("New Obstacle found: %d\n", size(swarm_obs, 1));
 
-        if all(communication_qualities(i, :) < PT)
-            % fprintf("Agent %d:HIT JAM ZONE\n", i);
-            % fprintf("Jam area location: %d\n", swarm(i, :));
-            % fprintf("Prev Speed: %d\n\n", prev_speed(i,1));
-            if ~ismember(swarm(i, :), swarm_obs) 
-                swarm_obs = [swarm_obs; swarm(i, :)];
-                global_best_value = 10000;
-                personal_best_values = ones(swarm_size) * 10000;
-                fprintf("Obstacle found, new size: %d\n", size(swarm_obs, 1));
-            end
-            speed(i,:) = -prev_speed(i,:) * backstep_when_jammed;;
-            % swarm(i,1)=swarm(i,1)-prev_speed(i,1) * 1.2;
-            % swarm(i,2)=swarm(i,2)-prev_speed(i,2) * 1.2;
-            
+            % Reset PSO best values
+            global_best_value = 10000;
+            personal_best_values = ones(swarm_size) * 10000;
+            speed(i,:) = -prev_speed(i,:) * backstep_when_jammed;
         end
 
+        % Update Agent positions
         swarm(i,:)=swarm(i,:)+speed(i,:)*h;
 
+        % Record agents last velocity
         prev_speed(i,:) = speed(i,:)*h;
         
         speed(i,:)=0;
@@ -543,9 +449,21 @@ for k=1:max_iter
 
     end
 
+    % Update checkpoint
+    centroid = mean(swarm);
+    dist_to_checkpoint = norm([checkpoints(checkpoint_index, 1) - centroid(1), checkpoints(checkpoint_index, 2) - centroid(2)]);
+    if dist_to_checkpoint < checkpoint_threshold
+        fprintf("Checkpoint %d reached\n", checkpoint_index);
+        checkpoint_index =  checkpoint_index + 1;
+        % Reset PSO best values
+        global_best_value = 10000;
+        personal_best_values = ones(swarm_size) * 10000;
+    end
+
     pause(0)
 
 end
+
 figure(1)
 axis([0 300  0, 1]);  % Update the limits for Figure 1
 
