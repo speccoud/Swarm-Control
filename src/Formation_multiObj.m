@@ -27,16 +27,18 @@ backstep_when_jammed = 1.2;
 
 
 % The position of the destination
-dest_x = 165;
-dest_y = 110;
+dest_x = 115;
+dest_y = 120;
 
 % The position of the obstacle
 obs_centers = [
     60, 40;
-    90, 60;
-    120, 80]; % Coordinates of multiple obstacle centers
+    90, 40;
+    115, 70;
+    140, 40]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
+    10;
     10;
     10;
     10]; % Radii of multiple obstacles
@@ -101,6 +103,7 @@ hold on
 rn_Text = text(t_Elapsed(end), rn(end), sprintf('rn: %.4f', rn(end)), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
 
 figure(4)
+axis equal;
 hold on
 % Plot each obstacle
 for j = 1:length(obs_centers)
@@ -117,7 +120,6 @@ end
 %Destination
 fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
 hold off
-axis equal
 
 drawnow                                         % Force a graphics refresh so that isn't counted in our elapsed time
 
@@ -143,13 +145,13 @@ markersize = [3, 3];
 
 %% ---Simulation---
 for k=1:max_iter
-
     % Plot the node trace inside the loop
     figure(4)
     set(gcf, 'Position', figure_positions(4, :));
     xlabel('$x$', 'Interpreter','latex', 'FontSize', 12, 'Rotation', 0)
     ylabel('$y$', 'Interpreter','latex', 'FontSize', 12, 'Rotation', 0)
     title('Node Trace');
+    axis equal;
     hold on;
 
     % Plot all nodes as markers
@@ -443,6 +445,7 @@ axis([0 300 min(rn) max(rn)+5]);  % Update the limits for Figure 2
 
 % Plot the final node trace outside the loop
 figure(4)
+axis equal;
 hold on;
 for i = 1:swarm_size
     trace_x = squeeze(swarm_trace(:, i, 1));
