@@ -32,15 +32,15 @@ dest_y = 110;
 
 % The position of the obstacle
 obs_centers = [
-    60, 50;
+    60, 40;
     120, 40;
-    170, 40;
+    % 170, 40;
     230, 40]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
     30;
     30;
-    30;
+    % 30;
     30;]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
@@ -54,7 +54,7 @@ swarm = [
     0,   -10;
     35,  -20;
     58,   0;
-    52,  13;
+    52,  -13;
     52, -18;
     ];
 
@@ -429,30 +429,28 @@ for k=1:max_iter
 
         if k >= 15
             for l=1:swarm_size
-                X = [dest_x,dest_y; swarm(l, 1),swarm(l, 2)];
-                distance_to_goal = pdist(X,'euclidean');
-                proximity_to_obstacle = 0;
+               X = [dest_x,dest_y; swarm(l, 1),swarm(l, 2)];
+               distance_to_goal = pdist(X,'euclidean');
+               proximity_to_obstacle = 0;
     
-                if size(swarm_obs) > 0
-                    obs = findClosestObstacle(swarm(l, :), swarm_obs);
-                    X = [obs(1),obs(2); swarm(l, 1),swarm(l, 2)];
-                    proximity_to_obstacle = pdist(X,'euclidean');
-                    fprintf("Proximity: %f \n", proximity_to_obstacle);
-                    if proximity_to_obstacle > 70
-                        fprintf("In HERE!!!: ");
-                        proximity_to_obstacle = 70;
-                    end
-                    proximity_to_obstacle = log(proximity_to_obstacle) / log(10);
-                end
+               if size(swarm_obs) > 0
+                   obs = findClosestObstacle(swarm(l, :), swarm_obs);
+                   X = [obs(1),obs(2); swarm(l, 1),swarm(l, 2)];
+                   proximity_to_obstacle = pdist(X,'euclidean');
+                   fprintf("Proximity: %f \n", proximity_to_obstacle);
+                   if proximity_to_obstacle > 70
+                       fprintf("In HERE!!!: ");
+                       proximity_to_obstacle = 70;
+                   end
+                   proximity_to_obstacle = log(proximity_to_obstacle) / log(10);
+               end
     
-                % Evaluate Agent Fitness
+               % Evaluate Agent Fitness
                    
                fitness = goal_w * distance_to_goal - obs_w * proximity_to_obstacle;
                % fprintf("Fitness: %d, ", fitness);
                % fprintf("Goal: %d, ", goal_w * distance_to_goal);
                % fprintf("Obs: %d \n", obs_w * proximity_to_obstacle);
-                   
-                
              
                 if fitness < personal_best_values(l)
                     personal_best_values(l) = fitness;
@@ -466,25 +464,61 @@ for k=1:max_iter
                     % fprintf("Location X: %d, ", global_best_loc(1, 1));
                     % fprintf("Y: %d\n", global_best_loc(1, 2));
                 end
+
+                % Look Ahead to 10 random points
+                for r=1:10
+                   r1 = rand();
+                   r2 = rand();
+                   potential_velocity = curr_vel_w * prev_speed(l, :) + c1 * r1 * (personal_best_locs(l, :) - swarm(l, :)) + c2 * r2 * (global_best_loc(1, :) - swarm(l, :));
+                   random_num = 1 + (3 - 1) * rand();
+                   potential_position = swarm(l, :) + (potential_velocity(1, :)* random_num);
+
+                   X = [dest_x,dest_y; potential_position(1),potential_position(2)];
+                   distance_to_goal = pdist(X,'euclidean');
+                   proximity_to_obstacle = 0;
+        
+                   if size(swarm_obs) > 0
+                       obs = findClosestObstacle(swarm(l, :), swarm_obs);
+                       X = [obs(1),obs(2); potential_position(1),potential_position(2)];
+                       proximity_to_obstacle = pdist(X,'euclidean');
+                       fprintf("Proximity: %f \n", proximity_to_obstacle);
+                       if proximity_to_obstacle > 70
+                           fprintf("In HERE!!!: ");
+                           proximity_to_obstacle = 70;
+                       end
+                       proximity_to_obstacle = log(proximity_to_obstacle) / log(10);
+                   end
+        
+                   % Evaluate Agent Fitness
+                       
+                   fitness = goal_w * distance_to_goal - obs_w * proximity_to_obstacle;
+                   % fprintf("Fitness: %d, ", fitness);
+                   % fprintf("Goal: %d, ", goal_w * distance_to_goal);
+                   % fprintf("Obs: %d \n", obs_w * proximity_to_obstacle);
+                       
+                   % fitnesses(end+1) = fitness;
+                   % fitnessesX(end+1) = potential_position(1);
+                   % fitnessesY(end+1) = potential_position(2);
+                    
+                 
+                    if fitness < personal_best_values(l)
+                        personal_best_values(l) = fitness;
+                        personal_best_locs(l, :) = potential_position(1, :);
+                    end
+        
+                    if fitness < global_best_value
+                        global_best_value = fitness;
+                        global_best_loc(1, :) = potential_position(1, :);
+                        % fprintf("NEW GLOBAL BEST: %d, ", global_best_value);
+                        % fprintf("Location X: %d, ", global_best_loc(1, 1));
+                        % fprintf("Y: %d\n", global_best_loc(1, 2));
+                    end
+                end
             end
             
-            
 
-            phi = rand; % Generate a random number in [0, 1]
-            U = rand; % Generate a uniformly distributed random number in (0, 1)
-            beta = 0.5;
-            avg_best = mean(personal_best_locs);
-            fprintf("Avg x: %f, ", avg_best(1, 1));
-            fprintf("y: %f \n", avg_best(1, 2));
-
-            new_velocity_x = avg_best(1) - beta * abs(2*phi*(personal_best_locs(i, 1) - swarm(i, 1))) * log(1/U);
-            new_velocity_y = avg_best(2) - beta * abs(2*phi*(personal_best_locs(i, 2) - swarm(i, 2))) * log(1/U);
-
-            new_velocity_x = new_velocity_x * 0.05;
-            new_velocity_y = new_velocity_y * 0.05;
-
-            % new_velocity_x = curr_vel_w * prev_speed(i, 1) + c1 * rand() * (personal_best_locs(i, 1) - swarm(i, 1)) + c2 * rand() * (global_best_loc(1, 1) - swarm(i, 1));
-            % new_velocity_y = curr_vel_w * prev_speed(i, 2) + c1 * rand() * (personal_best_locs(i, 2) - swarm(i, 2)) + c2 * rand() * (global_best_loc(1, 2) - swarm(i, 2));
+            new_velocity_x = curr_vel_w * prev_speed(i, 1) + c1 * (personal_best_locs(i, 1) - swarm(i, 1)) + c2 * (global_best_loc(1, 1) - swarm(i, 1));
+            new_velocity_y = curr_vel_w * prev_speed(i, 2) + c1 * (personal_best_locs(i, 2) - swarm(i, 2)) + c2 * (global_best_loc(1, 2) - swarm(i, 2));
             
            
             % if abs(new_velocity_x) > 10

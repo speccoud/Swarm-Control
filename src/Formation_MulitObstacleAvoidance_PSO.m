@@ -28,19 +28,20 @@ backstep_when_jammed = 1.2;
 
 % The position of the destination
 dest_x = 165;
-dest_y = 110;
+dest_y = 190;
 
 % The position of the obstacle
 obs_centers = [
-    60, 50;
+    60, 45;
     120, 40;
-    
+    170, 100
     230, 40]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
     30;
     30;
-    30;]; % Radii of multiple obstacles
+    30;
+    30]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
