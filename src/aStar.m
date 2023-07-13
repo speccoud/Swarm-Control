@@ -12,9 +12,9 @@ function path = aStar(start_pos, end_pos, obstacles)
             distance_to_obs = pdist([coords(1,1),coords(1,2); obs(1),obs(2)],'euclidean');
             if distance_to_obs < 10
                 grid(row, col) = 10;
-            elseif distance_to_obs < 20
-                grid(row, col) = 10; % Set the value at each position
             elseif distance_to_obs < 25
+                grid(row, col) = 5; % Set the value at each position
+            elseif distance_to_obs < 35
                 grid(row, col) = 1; % Set the value at each position
             else
                 grid(row, col) = 1; % Set the value at each position
@@ -110,7 +110,7 @@ function path = aStar(start_pos, end_pos, obstacles)
         % disp(indexes);
 
         % Convert path positions to 2D coordinates
-        pathCoords = path(:, 1:2) * gridStep;
+        pathCoords = path(1:2:end, 1:2) * gridStep;
         checkpoints = [pathCoords(:, 1), pathCoords(:, 2); end_pos(1), end_pos(2)];
         
         % disp('Coordinates of the cells in the path:');

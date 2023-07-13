@@ -27,8 +27,8 @@ backstep_when_jammed = 1.2;
 
 
 % The position of the destination
-dest_x = 300;
-dest_y = 200;
+dest_x = 250;
+dest_y = 140;
 
 checkpoints = [dest_x, dest_y;];
 checkpoint_index = 1;
@@ -37,11 +37,13 @@ checkpoint_threshold = 20; % Determines how close the centroid must be to comple
 % The position of the obstacle
 obs_centers = [
     120, 100;
-    190, 100
-    230, 60]; % Coordinates of multiple obstacle centers
+    185, 90
+    230, 60;
+    230, 20]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
     40;
+    30;
     30;
     30]; % Radii of multiple obstacles
 
@@ -78,7 +80,7 @@ global_best_loc = [0,0];
 
 % PSO Constants
 goal_w = 1;
-obs_w = 80; % @65-80 for log scale
+obs_w = 100; % @65-80 for log scale
 curr_vel_w = 0.11;
 c1 = 0.07;
 c2 = 0.13;
@@ -122,22 +124,6 @@ title('Average Distance Indicator');
 hold on
 rn_Text = text(t_Elapsed(end), rn(end), sprintf('rn: %.4f', rn(end)), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
 
-figure(4)
-hold on
-% Plot each obstacle
-for j = 1:length(obs_centers)
-    obs_center = obs_centers(j, :);
-    obs_radius = obs_radii(j);
-
-    % Plot the obstacle
-    theta = linspace(0, 2*pi, 100);
-    x = obs_radius * cos(theta) + obs_center(1);
-    y = obs_radius * sin(theta) + obs_center(2);
-    patch(x, y, 'red', 'FaceAlpha', 0.3, 'EdgeColor', 'none');
-end
-hold off
-axis equal
-
 drawnow                                         % Force a graphics refresh so that isn't counted in our elapsed time
 
 tic
@@ -165,11 +151,23 @@ for k=1:max_iter
 
     % Plot the node trace inside the loop
     figure(4)
+    clf;
     set(gcf, 'Position', figure_positions(4, :));
     xlabel('$x$', 'Interpreter','latex', 'FontSize', 12, 'Rotation', 0)
     ylabel('$y$', 'Interpreter','latex', 'FontSize', 12, 'Rotation', 0)
     title('Node Trace');
     hold on;
+    axis equal;
+    for j = 1:length(obs_centers)
+        obs_center = obs_centers(j, :);
+        obs_radius = obs_radii(j);
+    
+        % Plot the obstacle
+        theta = linspace(0, 2*pi, 100);
+        x = obs_radius * cos(theta) + obs_center(1);
+        y = obs_radius * sin(theta) + obs_center(2);
+        patch(x, y, 'red', 'FaceAlpha', 0.3, 'EdgeColor', 'none');
+    end
 
     % Plot all nodes as markers
     scatter(swarm(:, 1), swarm(:, 2), 16, node_colors, 'filled');
@@ -457,16 +455,29 @@ for k=1:max_iter
     % Update checkpoint
     centroid = mean(swarm);
     dist_to_checkpoint = norm([checkpoints(checkpoint_index, 1) - centroid(1), checkpoints(checkpoint_index, 2) - centroid(2)]);
+    checked = false;
+    
     if dist_to_checkpoint < checkpoint_threshold
         fprintf("Checkpoint %d reached\n", checkpoint_index);
         checkpoint_index =  checkpoint_index + 1;
+        % fprintf("Size %f\n", size(checkpoints,1));
+        if checkpoint_index < size(checkpoints,1)
+            dist_to_next_checkpoint = norm([checkpoints(checkpoint_index, 1) - centroid(1), checkpoints(checkpoint_index, 2) - centroid(2)]);
+            % fprintf("IN DOUBLE CHECK");
+            if dist_to_next_checkpoint < checkpoint_threshold
+                fprintf("Checkpoint %d reached\n", checkpoint_index);
+                fprintf("DOUBLE CHECK");
+                checkpoint_index =  checkpoint_index + 1;
+            end
+        end
         % Reset PSO best values
         global_best_value = 10000;
         personal_best_values = ones(swarm_size) * 10000;
+        checked = true;
     end
 
     dist_to_gbest = norm([global_best_loc(1, 1) - centroid(1), global_best_loc(1, 2) - centroid(2)]);
-    if dist_to_gbest < 3
+    if  dist_to_gbest < 4  && checkpoint_index > 1 && checked == false
         % Recalulate path
         path = aStar(mean(swarm), [dest_x dest_y], swarm_obs);
         if size(path) > 0
@@ -475,6 +486,7 @@ for k=1:max_iter
         end
     end
 
+    
     pause(0)
 
 end
