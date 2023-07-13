@@ -1,8 +1,8 @@
-function path = aStar(start_pos, end_pos, obstacles)
+function path = aStar(start_pos, end_pos, obstacles, grid, gridStep)
     gridSizeX = 500;
     gridSizeY = 500;
     gridStep = 5;
-
+    
     grid = zeros(gridSizeX/gridStep, gridSizeY/gridStep); % Initialize the matrix with zeros
 
     for row = 1:size(grid, 1)
@@ -31,6 +31,17 @@ function path = aStar(start_pos, end_pos, obstacles)
     % Add a check to ensure start indices are within range
     startX = max(1, min(startX, size(visited, 1)));
     startY = max(1, min(startY, size(visited, 2)));
+
+    % Add a check to ensure start indices are within range
+    % startX = max(1, min(startX, size(grid, 1)));
+    % startY = max(1, min(startY, size(grid, 2)));
+    
+    % Check if the start position is within the grid bounds
+    % if startX < 1 || startX > size(grid, 1) || startY < 1 || startY > size(grid, 2)
+    %     fprintf('Start position is out of grid bounds.\n');
+    %     path = [];
+    %     return;
+    % end
 
      % Check if the start position is within an obstacle
     if grid(startX, startY) > 1

@@ -29,6 +29,7 @@ backstep_when_jammed = 1.2;
 % The position of the destination
 dest_x = 250;
 dest_y = 140;
+dest_pos = [dest_x, dest_y];
 
 checkpoints = [dest_x, dest_y;];
 checkpoint_index = 1;
@@ -38,14 +39,13 @@ checkpoint_threshold = 20; % Determines how close the centroid must be to comple
 obs_centers = [
     120, 100;
     185, 90
-    230, 60;
-    230, 20]; % Coordinates of multiple obstacle centers
+    230, 60;]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
     40;
     30;
     30;
-    30]; % Radii of multiple obstacles
+    ]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
@@ -85,6 +85,17 @@ curr_vel_w = 0.11;
 c1 = 0.07;
 c2 = 0.13;
 
+%% --- Grid Map Initialization --
+% Define the size of the grid map and additional padding
+padding = 100; % Additional padding in units
+grid_step = 5; % Length of each grid
+
+% Calculate the swarm centroid
+centroid = mean(swarm);
+% Define an empty array to store the centroid path
+centroid_path = [];
+
+grid_map = [];
 
 %% ---Performance Indicators---
 t_Elapsed = 0;
@@ -148,6 +159,65 @@ markersize = [3, 3];
 
 %% ---Simulation---
 for k=1:max_iter
+
+    centroid_path = [centroid_path; centroid(1), centroid(2)];
+    if size(swarm_obs, 1) > 0
+        % Calculate the minimum and maximum coordinates of the agents, obstacles, and destinations
+        min_x = min([centroid(:, 1); swarm_obs(:, 1); dest_pos(:, 1)]) - padding;
+        max_x = max([centroid(:, 1); swarm_obs(:, 1); dest_pos(:, 1)]) + padding;
+        min_y = min([centroid(:, 2); swarm_obs(:, 2); dest_pos(:, 2)]) - padding;
+        max_y = max([centroid(:, 2); swarm_obs(:, 2); dest_pos(:, 2)]) + padding;
+
+        % Calculate the number of grid cells in each dimension
+        num_cells_x = ceil((max_x - min_x) / grid_step);
+        num_cells_y = ceil((max_y - min_y) / grid_step);
+
+        % Initialize the matrix with zeros
+        grid_map = zeros(num_cells_x, num_cells_y);
+
+        % Create a meshgrid for the grid map
+        [X, Y] = meshgrid(min_x:grid_step:max_x, min_y:grid_step:max_y);
+
+        % Plot the grid map
+        figure(5);
+        clf;
+        plot(X, Y, 'k-');
+        hold on;
+
+        % Destination
+        for c=1:size(checkpoints)
+            dest_x = checkpoints(c, 1);
+            dest_y = checkpoints(c, 2);
+            if c < checkpoint_index
+                fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
+            else
+                fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
+            end
+        end
+
+        plot(X', Y', 'k-');
+        axis equal;
+        xlabel('$x$', 'Interpreter','latex', 'FontSize', 12, 'Rotation', 0)
+        ylabel('$y$', 'Interpreter','latex', 'FontSize', 12, 'Rotation', 0)
+        title('Grid Map');
+
+        % Plot the agents, obstacles, and destinations on the grid map
+        agent_handles = scatter(centroid(:, 1), centroid(:, 2), 'filled', 'MarkerFaceColor', 'b');
+        obstacle_handles = scatter(swarm_obs(:, 1), swarm_obs(:, 2), 'filled', 'MarkerFaceColor', 'r');
+        destination_handles = scatter(dest_pos(:, 1), dest_pos(:, 2), 'filled', 'MarkerFaceColor', 'g');
+        
+        % Plot the centroid path as a yellow line
+        plot(centroid_path(:, 1), centroid_path(:, 2), 'Color', 'y', 'LineWidth', 2);
+        
+        % Add a legend
+        lgd = legend([agent_handles, obstacle_handles, destination_handles, plot(NaN, NaN, 'y', 'LineWidth', 2)], 'Swarm Centroid', 'Obstacles', 'Destinations', 'Centroid Path');
+        lgd.Location = 'eastoutside';
+
+        % Adjust the figure size to accommodate the legend
+        pos = get(gcf, 'Position');
+        pos(3) = pos(3) + 100; % Increase the width to accommodate the legend
+        % set(gcf, 'Position', figure_positions(5, :));
+    end
 
     % Plot the node trace inside the loop
     figure(4)
@@ -417,7 +487,7 @@ for k=1:max_iter
             speed(i,:) = -prev_speed(i,:) * backstep_when_jammed;
 
             % Recalulate path
-            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs);
+            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             if size(path) > 0
                 checkpoints = path;
                 checkpoint_index = 1;
@@ -479,7 +549,7 @@ for k=1:max_iter
     dist_to_gbest = norm([global_best_loc(1, 1) - centroid(1), global_best_loc(1, 2) - centroid(2)]);
     if  dist_to_gbest < 4  && checkpoint_index > 1 && checked == false
         % Recalulate path
-        path = aStar(mean(swarm), [dest_x dest_y], swarm_obs);
+        path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
         if size(path) > 0
             checkpoints = path;
             checkpoint_index = 1;
