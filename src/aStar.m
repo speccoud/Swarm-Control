@@ -3,25 +3,25 @@ function path = aStar(start_pos, end_pos, obstacles)
     gridSizeY = 500;
     gridStep = 5;
 
-    grid = zeros(10); % Initialize the matrix with zeros
+    grid = zeros(gridSizeX/gridStep, gridSizeY/gridStep); % Initialize the matrix with zeros
 
-    for row = 1:(gridSizeX/gridStep)
-        for col = 1:(gridSizeY/gridStep)
+    for row = 1:size(grid, 1)
+        for col = 1:size(grid, 2)
             coords = matrix_coordinates(row, col, gridStep);
             obs = findClosestObstacle(coords(1,:), obstacles);
             distance_to_obs = pdist([coords(1,1),coords(1,2); obs(1),obs(2)],'euclidean');
             if distance_to_obs < 10
-                grid(row, col) = 20;
-            elseif distance_to_obs < 25
+                grid(row, col) = 10;
+            elseif distance_to_obs < 20
                 grid(row, col) = 10; % Set the value at each position
+            elseif distance_to_obs < 25
+                grid(row, col) = 1; % Set the value at each position
             else
                 grid(row, col) = 1; % Set the value at each position
             end
             
         end
     end
-    
-    disp(grid)
 
     visited = false(size(grid));
     % Define the start and goal positions
@@ -31,6 +31,13 @@ function path = aStar(start_pos, end_pos, obstacles)
     % Add a check to ensure start indices are within range
     startX = max(1, min(startX, size(visited, 1)));
     startY = max(1, min(startY, size(visited, 2)));
+
+     % Check if the start position is within an obstacle
+    if grid(startX, startY) > 1
+        fprintf('Start position is within an obstacle. Value: %d\n', grid(startX, startY));
+        % path = [];
+        % return;
+    end
     
     goalX = round(end_pos(1) / gridStep);
     goalY = round(end_pos(2) / gridStep);
@@ -38,10 +45,10 @@ function path = aStar(start_pos, end_pos, obstacles)
     % Add a check to ensure goal indices are within range
     goalX = max(1, min(goalX, size(visited, 1)));
     goalY = max(1, min(goalY, size(visited, 2)));
-    fprintf("StartX: %f, ", startX)
-    fprintf("Y: %f\n", startY)
-    fprintf("End: %f, ", goalX)
-    fprintf("Y: %f\n", goalY)
+    % fprintf("StartX: %f, ", startX)
+    % fprintf("Y: %f\n", startY)
+    % fprintf("End: %f, ", goalX)
+    % fprintf("Y: %f\n", goalY)
 
     start = [startX, startY];
     goal = [goalX, goalY];
@@ -55,6 +62,9 @@ function path = aStar(start_pos, end_pos, obstacles)
     gScore(start(1), start(2)) = 0;
     foundGoal = false;
     
+    % Define the possible moves (up, down, left, right, diagonal)
+    moves = [0, -1; 0, 1; -1, 0; 1, 0; -1, -1; -1, 1; 1, -1; 1, 1];
+    
     while ~queue.isEmpty()
         current = queue.pop();
         
@@ -62,9 +72,6 @@ function path = aStar(start_pos, end_pos, obstacles)
             foundGoal = true;
             break;
         end
-        
-        % Define the possible moves (up, down, left, right)
-        moves = [0, -1; 0, 1; -1, 0; 1, 0];
         
         for i = 1:size(moves, 1)
             next = current + moves(i, :);
@@ -99,15 +106,15 @@ function path = aStar(start_pos, end_pos, obstacles)
         % Convert path positions to indexes
         indexes = sub2ind(size(grid), path(:, 1), path(:, 2));
         
-        disp('Indexes of the cells in the path:');
-        disp(indexes);
+        % disp('Indexes of the cells in the path:');
+        % disp(indexes);
 
         % Convert path positions to 2D coordinates
         pathCoords = path(:, 1:2) * gridStep;
         checkpoints = [pathCoords(:, 1), pathCoords(:, 2); end_pos(1), end_pos(2)];
         
-        disp('Coordinates of the cells in the path:');
-        disp(checkpoints);
+        % disp('Coordinates of the cells in the path:');
+        % disp(checkpoints);
         path = checkpoints;
     else
         disp('No path found.');

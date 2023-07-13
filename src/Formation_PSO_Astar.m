@@ -36,8 +36,8 @@ checkpoint_threshold = 20; % Determines how close the centroid must be to comple
 
 % The position of the obstacle
 obs_centers = [
-    120, 60;
-    170, 100
+    120, 100;
+    190, 100
     230, 60]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
@@ -463,6 +463,16 @@ for k=1:max_iter
         % Reset PSO best values
         global_best_value = 10000;
         personal_best_values = ones(swarm_size) * 10000;
+    end
+
+    dist_to_gbest = norm([global_best_loc(1, 1) - centroid(1), global_best_loc(1, 2) - centroid(2)]);
+    if dist_to_gbest < 3
+        % Recalulate path
+        path = aStar(mean(swarm), [dest_x dest_y], swarm_obs);
+        if size(path) > 0
+            checkpoints = path;
+            checkpoint_index = 1;
+        end
     end
 
     pause(0)
