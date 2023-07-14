@@ -1,9 +1,4 @@
 function path = aStar(start_pos, end_pos, obstacles, grid, gridStep)
-    gridSizeX = 500;
-    gridSizeY = 500;
-    gridStep = 5;
-    
-    grid = zeros(gridSizeX/gridStep, gridSizeY/gridStep); % Initialize the matrix with zeros
 
     for row = 1:size(grid, 1)
         for col = 1:size(grid, 2)
@@ -12,10 +7,8 @@ function path = aStar(start_pos, end_pos, obstacles, grid, gridStep)
             distance_to_obs = pdist([coords(1,1),coords(1,2); obs(1),obs(2)],'euclidean');
             if distance_to_obs < 10
                 grid(row, col) = 10;
-            elseif distance_to_obs < 25
+            elseif distance_to_obs < 20
                 grid(row, col) = 5; % Set the value at each position
-            elseif distance_to_obs < 35
-                grid(row, col) = 1; % Set the value at each position
             else
                 grid(row, col) = 1; % Set the value at each position
             end

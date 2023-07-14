@@ -34,7 +34,7 @@ dest_y = 190;
 obs_centers = [
     60, 45;
     120, 40;
-    170, 100
+    170, 80
     230, 40]; % Coordinates of multiple obstacle centers
 
 obs_radii = [

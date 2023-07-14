@@ -27,8 +27,8 @@ backstep_when_jammed = 1.2;
 
 
 % The position of the destination
-dest_x = 250;
-dest_y = 140;
+dest_x = 180;
+dest_y = 200;
 dest_pos = [dest_x, dest_y];
 
 checkpoints = [dest_x, dest_y;];
@@ -37,29 +37,31 @@ checkpoint_threshold = 20; % Determines how close the centroid must be to comple
 
 % The position of the obstacle
 obs_centers = [
-    120, 100;
-    185, 90
-    230, 60;]; % Coordinates of multiple obstacle centers
+    20, 100;
+    120, 140;
+    160, 110;
+    190, 60;]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-    40;
     30;
+    35;
     30;
-    ]; % Radii of multiple obstacles
+    40]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
 
+stuckNum = 0;
 
 %% ---Initialize Agents' Positions---
 swarm = [
      7, 0;
-    7, -20;
-    0,   -10;
-    35,  -20;
+    7, 30;
+    0,   10;
+    35,  20;
     58,   0;
     52,  13;
-    52, -18;
+    52, 18;
     ];
 
 
@@ -159,7 +161,7 @@ markersize = [3, 3];
 
 %% ---Simulation---
 for k=1:max_iter
-
+    centroid = mean(swarm);
     centroid_path = [centroid_path; centroid(1), centroid(2)];
     if size(swarm_obs, 1) > 0
         % Calculate the minimum and maximum coordinates of the agents, obstacles, and destinations
@@ -460,6 +462,7 @@ for k=1:max_iter
                 if fitness < global_best_value
                     global_best_value = fitness;
                     global_best_loc(1, :) = swarm(l, :);
+                    % fprintf("Global best updated\n")
                 end
             end
             
@@ -485,6 +488,20 @@ for k=1:max_iter
             global_best_value = 10000;
             personal_best_values = ones(swarm_size) * 10000;
             speed(i,:) = -prev_speed(i,:) * backstep_when_jammed;
+
+            min_x = min([centroid(:, 1); swarm_obs(:, 1); dest_pos(:, 1)]) - padding;
+            max_x = max([centroid(:, 1); swarm_obs(:, 1); dest_pos(:, 1)]) + padding;
+            min_y = min([centroid(:, 2); swarm_obs(:, 2); dest_pos(:, 2)]) - padding;
+            max_y = max([centroid(:, 2); swarm_obs(:, 2); dest_pos(:, 2)]) + padding;
+    
+            % Calculate the number of grid cells in each dimension
+            num_cells_x = ceil((max_x - min_x) / grid_step);
+            num_cells_y = ceil((max_y - min_y) / grid_step);
+    
+            % fprintf("Num cells: %d\n", num_cells_x)
+    
+            % Initialize the matrix with zeros
+            grid_map = zeros(num_cells_x, num_cells_y);
 
             % Recalulate path
             path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
@@ -536,7 +553,7 @@ for k=1:max_iter
             % fprintf("IN DOUBLE CHECK");
             if dist_to_next_checkpoint < checkpoint_threshold
                 fprintf("Checkpoint %d reached\n", checkpoint_index);
-                fprintf("DOUBLE CHECK");
+                % fprintf("DOUBLE CHECK\n");
                 checkpoint_index =  checkpoint_index + 1;
             end
         end
@@ -547,13 +564,39 @@ for k=1:max_iter
     end
 
     dist_to_gbest = norm([global_best_loc(1, 1) - centroid(1), global_best_loc(1, 2) - centroid(2)]);
-    if  dist_to_gbest < 4  && checkpoint_index > 1 && checked == false
+    if dist_to_gbest < 5 && size(checkpoints,1) > 1
+        
         % Recalulate path
-        path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-        if size(path) > 0
-            checkpoints = path;
-            checkpoint_index = 1;
+        if stuckNum == 0
+            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            if size(path) > 0
+                checkpoints = path;
+                checkpoint_index = 1;
+                global_best_value = 10000;
+                personal_best_values = ones(swarm_size) * 10000;
+            end
+            fprintf("Recalulate path cause stuck\n", mean(prev_speed))
         end
+        
+        
+        if mod(stuckNum, 5) == 0 && checkpoint_index < size(checkpoints,1)
+            fprintf("Update checkpoint cause stuck, stuck num: %d\n", stuckNum)
+            checkpoint_index = checkpoint_index + 1;
+            global_best_value = 10000;
+            personal_best_values = ones(swarm_size) * 10000;
+            goal_w = 10;
+            for j = 1:swarm_size
+                prev_speed(j,1) = rand() * 5;
+                prev_speed(j,2) = rand() * 5;
+            end
+            
+        end
+        stuckNum = stuckNum + 1;
+    
+        
+    else
+        stuckNum = 0;
+        goal_w = 1;
     end
 
     
