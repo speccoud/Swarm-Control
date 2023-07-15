@@ -1,4 +1,4 @@
-function path = dStarLite(start_pos, end_pos, obstacles, grid, gridStep)
+function path = dijkstra(start_pos, end_pos, obstacles, grid, gridStep)
     for row = 1:size(grid, 1)
         for col = 1:size(grid, 2)
             coords = matrix_coordinates(row, col, gridStep);
@@ -35,13 +35,10 @@ function path = dStarLite(start_pos, end_pos, obstacles, grid, gridStep)
     goal = [goalX, goalY];
     
     queue = PriorityQueue();
-    km = 0;
-    queue.insert(goal, heuristic(goal, goal) + km);
+    queue.insert(goal, 0);
     visited(goal(1), goal(2)) = true;
-    rhs = inf(size(grid));
-    rhs(goal(1), goal(2)) = 0;
-    gScore = inf(size(grid));
-    gScore(start(1), start(2)) = 0;
+    distance = inf(size(grid));
+    distance(goal(1), goal(2)) = 0;
     
     % Define the possible moves (up, down, left, right, diagonal)
     moves = [0, -1; 0, 1; -1, 0; 1, 0; -1, -1; -1, 1; 1, -1; 1, 1];
@@ -49,35 +46,23 @@ function path = dStarLite(start_pos, end_pos, obstacles, grid, gridStep)
     while ~queue.isEmpty()
         current = queue.pop();
         
-        if ~isinf(rhs(current(1), current(2)))
-            kold = rhs(current(1), current(2));
-            if kold < gScore(current(1), current(2))
-                for i = 1:size(moves, 1)
-                    next = current + moves(i, :);
-                    row = next(1);
-                    col = next(2);
+        if ~isinf(distance(current(1), current(2)))
+            for i = 1:size(moves, 1)
+                next = current + moves(i, :);
+                row = next(1);
+                col = next(2);
 
-                    if row >= 1 && row <= size(grid, 1) && col >= 1 && col <= size(grid, 2)
-                        if grid(row, col) == 1
-                            rhs(current(1), current(2)) = min(rhs(current(1), current(2)), gScore(row, col) + 1);
+                if row >= 1 && row <= size(grid, 1) && col >= 1 && col <= size(grid, 2)
+                    if grid(row, col) == 1
+                        newDistance = distance(current(1), current(2)) + 1;
+                        if newDistance < distance(row, col)
+                            distance(row, col) = newDistance;
+                            if ~visited(row, col)
+                                visited(row, col) = true;
+                                queue.insert([row, col], newDistance);
+                            end
                         end
                     end
-                end
-            end
-        end
-        
-        if ~isequal(current, goal)
-            queue.insert(current, calculateKey(current, rhs, gScore, km));
-        end
-        
-        for i = 1:size(moves, 1)
-            next = current + moves(i, :);
-            row = next(1);
-            col = next(2);
-
-            if row >= 1 && row <= size(grid, 1) && col >= 1 && col <= size(grid, 2)
-                if grid(row, col) == 1
-                    updateVertex(next, start, goal, rhs, gScore, grid, km, queue, visited);
                 end
             end
         end
@@ -95,8 +80,8 @@ function path = dStarLite(start_pos, end_pos, obstacles, grid, gridStep)
             
             for i = 1:size(neighbors, 1)
                 neighbor = neighbors(i, :);
-                if gScore(neighbor(1), neighbor(2)) + 1 < minVal
-                    minVal = gScore(neighbor(1), neighbor(2)) + 1;
+                if distance(neighbor(1), neighbor(2)) + 1 < minVal
+                    minVal = distance(neighbor(1), neighbor(2)) + 1;
                     minVertex = neighbor;
                 end
             end
@@ -125,7 +110,7 @@ function h = heuristic(position, goal)
 end
 
 function coords = matrix_coordinates(row, col, gridStep)
-    coords = [(row-1) * garidStep, (col-1) * gridStep];
+    coords = [(row-1) * gridStep, (col-1) * gridStep];
 end
 
 function key = calculateKey(vertex, rhs, gScore, km)
