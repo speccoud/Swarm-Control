@@ -28,6 +28,7 @@ start_iteration = 20;
 path_alg = "a_star";    % Options: a_star, d_star_lite, dijkstra
 
 
+
 % The position of the destination
 dest_x = 150;
 dest_y = 150;
@@ -415,7 +416,7 @@ for k=1:max_iter
 
         efficiencies = distances(:) / metric_iter_num;
         mean_dist = mean(distances);
-        disp(distances);
+        
         fprintf("Avg. Distance: %f\n", mean_dist);
         fprintf("Avg. Efficiency: %f\n", mean(efficiencies));
         fprintf("Avg. Jn: %f\n", mean(Jn_arr));
@@ -542,8 +543,8 @@ for k=1:max_iter
             path =[];
             if path_alg == "a_star"
                 path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "d_star_lite"
-                path = dStarLite(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "jump_point_search"
+                path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             elseif path_alg == "dijkstra"
                 path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             end
@@ -623,8 +624,8 @@ for k=1:max_iter
             path =[];
             if path_alg == "a_star"
                 path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "d_star_lite"
-                path = dStarLite(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "jump_point_search"
+                path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             elseif path_alg == "dijkstra"
                 path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             end

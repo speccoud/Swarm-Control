@@ -1,4 +1,5 @@
 function path = dijkstra(start_pos, end_pos, obstacles, grid, gridStep)
+
     for row = 1:size(grid, 1)
         for col = 1:size(grid, 2)
             coords = matrix_coordinates(row, col, gridStep);
@@ -15,30 +16,39 @@ function path = dijkstra(start_pos, end_pos, obstacles, grid, gridStep)
     end
 
     visited = false(size(grid));
+    % Define the start and goal positions
     startX = round(start_pos(1) / gridStep);
     startY = round(start_pos(2) / gridStep);
     
+    % Add a check to ensure start indices are within range
     startX = max(1, min(startX, size(visited, 1)));
     startY = max(1, min(startY, size(visited, 2)));
 
+    % Check if the start position is within an obstacle
     if grid(startX, startY) > 1
         fprintf('Start position is within an obstacle. Value: %d\n', grid(startX, startY));
+        path = [];
+        return;
     end
     
     goalX = round(end_pos(1) / gridStep);
     goalY = round(end_pos(2) / gridStep);
     
+    % Add a check to ensure goal indices are within range
     goalX = max(1, min(goalX, size(visited, 1)));
     goalY = max(1, min(goalY, size(visited, 2)));
 
     start = [startX, startY];
     goal = [goalX, goalY];
     
+    % Perform Dijkstra's algorithm
     queue = PriorityQueue();
-    queue.insert(goal, 0);
-    visited(goal(1), goal(2)) = true;
-    distance = inf(size(grid));
-    distance(goal(1), goal(2)) = 0;
+    queue.insert(start, 0); % Start position with priority 0
+    visited(start(1), start(2)) = true;
+    parent = zeros(size(grid));
+    cost = inf(size(grid));
+    cost(start(1), start(2)) = 0;
+    foundGoal = false;
     
     % Define the possible moves (up, down, left, right, diagonal)
     moves = [0, -1; 0, 1; -1, 0; 1, 0; -1, -1; -1, 1; 1, -1; 1, 1];
@@ -46,49 +56,39 @@ function path = dijkstra(start_pos, end_pos, obstacles, grid, gridStep)
     while ~queue.isEmpty()
         current = queue.pop();
         
-        if ~isinf(distance(current(1), current(2)))
-            for i = 1:size(moves, 1)
-                next = current + moves(i, :);
-                row = next(1);
-                col = next(2);
-
-                if row >= 1 && row <= size(grid, 1) && col >= 1 && col <= size(grid, 2)
-                    if grid(row, col) == 1
-                        newDistance = distance(current(1), current(2)) + 1;
-                        if newDistance < distance(row, col)
-                            distance(row, col) = newDistance;
-                            if ~visited(row, col)
-                                visited(row, col) = true;
-                                queue.insert([row, col], newDistance);
-                            end
-                        end
-                    end
+        if current(1) == goal(1) && current(2) == goal(2)
+            foundGoal = true;
+            break;
+        end
+        
+        for i = 1:size(moves, 1)
+            next = current + moves(i, :);
+            row = next(1);
+            col = next(2);
+            
+            % Check if the next position is valid and not visited
+            if row >= 1 && row <= size(grid, 1) && col >= 1 && col <= size(grid, 2) && grid(row, col) == 1 && ~visited(row, col)
+                visited(row, col) = true;
+                newCost = cost(current(1), current(2)) + 1; % Assuming a uniform cost of 1 for each step
+                if newCost < cost(row, col)
+                    cost(row, col) = newCost;
+                    queue.insert(next, newCost);
+                    parent(row, col) = sub2ind(size(grid), current(1), current(2));
                 end
             end
         end
     end
     
     % Retrieve the path if a goal was found
-    if visited(startX, startY)
+    if foundGoal
         path = [];
-        current = start;
-        while ~isequal(current, goal)
+        current = goal;
+        while ~isequal(current, start)
             path = [current; path];
-            neighbors = getNeighbors(current, moves);
-            minVal = inf;
-            minVertex = current;
-            
-            for i = 1:size(neighbors, 1)
-                neighbor = neighbors(i, :);
-                if distance(neighbor(1), neighbor(2)) + 1 < minVal
-                    minVal = distance(neighbor(1), neighbor(2)) + 1;
-                    minVertex = neighbor;
-                end
-            end
-            
-            current = minVertex;
+            index = parent(current(1), current(2));
+            current = [mod(index-1, size(grid, 1))+1, floor((index-1)/size(grid, 1))+1];
         end
-        path = [path; goal];
+        path = [start; path];
         
         % Convert path positions to indexes
         indexes = sub2ind(size(grid), path(:, 1), path(:, 2));
@@ -104,39 +104,6 @@ function path = dijkstra(start_pos, end_pos, obstacles, grid, gridStep)
     end
 end
 
-function h = heuristic(position, goal)
-    % Euclidean distance heuristic
-    h = norm(position - goal);
-end
-
 function coords = matrix_coordinates(row, col, gridStep)
     coords = [(row-1) * gridStep, (col-1) * gridStep];
-end
-
-function key = calculateKey(vertex, rhs, gScore, km)
-    key = [min(gScore(vertex(1), vertex(2)), rhs(vertex(1), vertex(2))) + heuristic(vertex, goal) + km, min(gScore(vertex(1), vertex(2)), rhs(vertex(1), vertex(2)))];
-end
-
-function updateVertex(vertex, start, goal, rhs, gScore, grid, km, queue, visited)
-    if ~isequal(vertex, goal)
-        neighbors = getNeighbors(vertex, moves);
-        minVal = inf;
-        
-        for i = 1:size(neighbors, 1)
-            neighbor = neighbors(i, :);
-            if gScore(neighbor(1), neighbor(2)) + 1 < minVal
-                minVal = gScore(neighbor(1), neighbor(2)) + 1;
-            end
-        end
-        
-        rhs(vertex(1), vertex(2)) = minVal;
-    end
-    
-    if visited(vertex(1), vertex(2))
-        queue.insert(vertex, calculateKey(vertex, rhs, gScore, km));
-    end
-end
-
-function neighbors = getNeighbors(vertex, moves)
-    neighbors = vertex + moves;
 end
