@@ -24,29 +24,26 @@ b0         = 20; % was 20
 bf         = 0;
 af         = 1; % was 1
 backstep_when_jammed = 1.2;
+start_iteration = 20;
 
 
 % The position of the destination
-dest_x = 180;
-dest_y = 200;
+dest_x = 150;
+dest_y = 150;
 dest_pos = [dest_x, dest_y];
 
 checkpoints = [dest_x, dest_y;];
 checkpoint_index = 1;
 checkpoint_threshold = 20; % Determines how close the centroid must be to complete a checkpoint
+destination_threshold = 10;
 
 % The position of the obstacle
 obs_centers = [
-    20, 100;
-    120, 140;
-    160, 110;
-    190, 60;]; % Coordinates of multiple obstacle centers
+    90, 90;]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-    30;
     35;
-    30;
-    40]; % Radii of multiple obstacles
+    ]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
@@ -67,10 +64,15 @@ swarm = [
 
 %% ---Initialize the velocity---
 for j = 1:swarm_size
-    speed(j,1) = rand();
-    speed(j,2) = rand();
-    prev_speed(j,1) = rand();
-    prev_speed(j,2) = rand();
+    % speed(j,1) = rand();
+    % speed(j,2) = rand();
+    % prev_speed(j,1) = rand();
+    % prev_speed(j,2) = rand();
+
+    speed(j,1) = 0;
+    speed(j,2) = 0;
+    prev_speed(j,1) = 0;
+    prev_speed(j,2) = 0;
 end
 
 % PSO Variables
@@ -102,6 +104,7 @@ grid_map = [];
 %% ---Performance Indicators---
 t_Elapsed = 0;
 Jn        = 0;
+Jn_arr = [];
 rn        = 0;
 
 % Define the figure positions
@@ -185,16 +188,18 @@ for k=1:max_iter
         clf;
         plot(X, Y, 'k-');
         hold on;
-
-        % Destination
+        
+        % Checkpoints
         for c=1:size(checkpoints)
             dest_x = checkpoints(c, 1);
             dest_y = checkpoints(c, 2);
             if c < checkpoint_index
                 fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
+            elseif c == size(checkpoints,1)
+                fill([dest_pos(:, 1) - 2, dest_pos(:, 1) + 2, dest_pos(:, 1) + 2, dest_pos(:, 1) - 2, dest_pos(:, 1) - 2], [dest_pos(:, 2) - 2, dest_pos(:, 2) - 2, dest_pos(:, 2) + 2, dest_pos(:, 2) + 2, dest_pos(:, 2) - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'magenta');
             else
                 fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
-            end
+            end 
         end
 
         plot(X', Y', 'k-');
@@ -206,13 +211,16 @@ for k=1:max_iter
         % Plot the agents, obstacles, and destinations on the grid map
         agent_handles = scatter(centroid(:, 1), centroid(:, 2), 'filled', 'MarkerFaceColor', 'b');
         obstacle_handles = scatter(swarm_obs(:, 1), swarm_obs(:, 2), 'filled', 'MarkerFaceColor', 'r');
-        destination_handles = scatter(dest_pos(:, 1), dest_pos(:, 2), 'filled', 'MarkerFaceColor', 'g');
+        
         
         % Plot the centroid path as a yellow line
         plot(centroid_path(:, 1), centroid_path(:, 2), 'Color', 'y', 'LineWidth', 2);
+        checkpoint_legend = plot(NaN, NaN, 's', 'MarkerEdgeColor', 'k', 'LineWidth', 2);
+        destination_handles = plot(NaN, NaN, 's', 'MarkerEdgeColor', 'magenta', 'LineWidth', 2);
+        path_legend = plot(NaN, NaN, 'y', 'LineWidth', 2);
         
         % Add a legend
-        lgd = legend([agent_handles, obstacle_handles, destination_handles, plot(NaN, NaN, 'y', 'LineWidth', 2)], 'Swarm Centroid', 'Obstacles', 'Destinations', 'Centroid Path');
+        lgd = legend([agent_handles, obstacle_handles, checkpoint_legend, destination_handles, path_legend], 'Swarm Centroid', 'Jam Location', 'Checkpoints', 'Destination', 'Centroid Path');
         lgd.Location = 'eastoutside';
 
         % Adjust the figure size to accommodate the legend
@@ -230,7 +238,7 @@ for k=1:max_iter
     title('Node Trace');
     hold on;
     axis equal;
-    for j = 1:length(obs_centers)
+    for j = 1:size(obs_centers,1)
         obs_center = obs_centers(j, :);
         obs_radius = obs_radii(j);
     
@@ -279,6 +287,8 @@ for k=1:max_iter
         dest_y = checkpoints(c, 2);
         if c < checkpoint_index
             fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
+        elseif c == size(checkpoints,1)
+            fill([dest_pos(:, 1) - 2, dest_pos(:, 1) + 2, dest_pos(:, 1) + 2, dest_pos(:, 1) - 2, dest_pos(:, 1) - 2], [dest_pos(:, 2) - 2, dest_pos(:, 2) - 2, dest_pos(:, 2) + 2, dest_pos(:, 2) + 2, dest_pos(:, 2) - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'magenta');
         else
             fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
         end 
@@ -294,7 +304,7 @@ for k=1:max_iter
     hold on
 
     % Plot each obstacle
-    for j = 1:length(obs_centers)
+    for j = 1:size(obs_centers,1)
         obs_center = obs_centers(j, :);
         obs_radius = obs_radii(j);
 
@@ -306,18 +316,19 @@ for k=1:max_iter
     end
     
     hold on;
-       
     %Destination
     for c=1:size(checkpoints)
         dest_x = checkpoints(c, 1);
         dest_y = checkpoints(c, 2);
         if c < checkpoint_index
             fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'g');
+        elseif c == size(checkpoints,1)
+            fill([dest_pos(:, 1) - 2, dest_pos(:, 1) + 2, dest_pos(:, 1) + 2, dest_pos(:, 1) - 2, dest_pos(:, 1) - 2], [dest_pos(:, 2) - 2, dest_pos(:, 2) - 2, dest_pos(:, 2) + 2, dest_pos(:, 2) + 2, dest_pos(:, 2) - 2], 'w', 'LineWidth', 2, 'EdgeColor', 'magenta');
         else
             fill([dest_x - 2, dest_x + 2, dest_x + 2, dest_x - 2, dest_x - 2], [dest_y - 2, dest_y - 2, dest_y + 2, dest_y + 2, dest_y - 2], 'w', 'LineWidth', 2);
         end 
     end
-
+    
     if size(swarm_obs, 1)
         plot(swarm_obs(:, 1), swarm_obs(:, 2), 'r*');
         obs = findClosestObstacle(swarm(5, :), swarm_obs);
@@ -383,7 +394,28 @@ for k=1:max_iter
     % STOP Simulation if reached destination
     if checkpoint_index > length(checkpoints)
         fprintf("Destination Reached\n");
-        fprintf("END SIMULATION\n")
+        fprintf("END SIMULATION\n\n")
+        fprintf("METRICS\n");
+        fprintf("Num Iterations: %d\n", k - start_iteration);
+        
+        distances = zeros(swarm_size, 1);
+        for d=start_iteration+1:k
+            for j=1:swarm_size
+                prev_coordinates = swarm_trace(k-1, j, :);
+                curr_coordinates = swarm_trace(k, j, :);
+
+                x = [prev_coordinates(1), prev_coordinates(2); curr_coordinates(1), curr_coordinates(2);];
+                distance = pdist(x,'euclidean');
+                distances(j) = distances(j) + distance;
+            end
+        end
+
+        efficiencies = distances(:) / k;
+        mean_dist = mean(distances);
+        disp(distances);
+        fprintf("Avg. Distance: %f\n", mean_dist);
+        fprintf("Avg. Efficiency: %f\n", mean(efficiencies));
+        fprintf("Avg. Jn: %f\n", mean(Jn_arr));
         return;
     end
 
@@ -400,7 +432,7 @@ for k=1:max_iter
             gij=rij/sqrt(rij^2+r0^2);
 
             % Check if agent is within a certain range of any of the obstacles
-            for m = 1:length(obs_centers)
+            for m = 1:size(obs_centers,1)
                 obs_center = obs_centers(m, :);
                 obs_radius = obs_radii(m);
     
@@ -432,7 +464,7 @@ for k=1:max_iter
         end
 
         % PSO Controller
-        if k >= 15
+        if k >= start_iteration
             for l=1:swarm_size
                 X = [checkpoints(checkpoint_index, 1),checkpoints(checkpoint_index, 2); swarm(l, 1),swarm(l, 2)];
                 distance_to_goal = pdist(X,'euclidean');
@@ -524,6 +556,10 @@ for k=1:max_iter
 
         %---Average Communication Performance Indicator---%
         Jn=cat(1, Jn, phi_rij);
+        if k >= start_iteration
+            Jn_arr = [Jn_arr; Jn];
+        end
+        
         Jn=smooth(Jn);
         set(Jn_Plot, 'xdata', t_Elapsed, 'ydata', Jn);      % Plot Jn
         set(Jn_Text, 'Position', [t_Elapsed(end), Jn(end)], 'String', sprintf('Jn: %.4f', Jn(end)));
@@ -543,15 +579,19 @@ for k=1:max_iter
     centroid = mean(swarm);
     dist_to_checkpoint = norm([checkpoints(checkpoint_index, 1) - centroid(1), checkpoints(checkpoint_index, 2) - centroid(2)]);
     checked = false;
+    threshold = checkpoint_threshold;
+    if checkpoint_index == size(checkpoints,1)
+        threshold = destination_threshold;
+    end
     
-    if dist_to_checkpoint < checkpoint_threshold
+    if dist_to_checkpoint < threshold
         fprintf("Checkpoint %d reached\n", checkpoint_index);
         checkpoint_index =  checkpoint_index + 1;
         % fprintf("Size %f\n", size(checkpoints,1));
         if checkpoint_index < size(checkpoints,1)
             dist_to_next_checkpoint = norm([checkpoints(checkpoint_index, 1) - centroid(1), checkpoints(checkpoint_index, 2) - centroid(2)]);
             % fprintf("IN DOUBLE CHECK");
-            if dist_to_next_checkpoint < checkpoint_threshold
+            if dist_to_next_checkpoint < threshold
                 fprintf("Checkpoint %d reached\n", checkpoint_index);
                 % fprintf("DOUBLE CHECK\n");
                 checkpoint_index =  checkpoint_index + 1;
@@ -585,10 +625,10 @@ for k=1:max_iter
             global_best_value = 10000;
             personal_best_values = ones(swarm_size) * 10000;
             goal_w = 10;
-            for j = 1:swarm_size
-                prev_speed(j,1) = rand() * 5;
-                prev_speed(j,2) = rand() * 5;
-            end
+            % for j = 1:swarm_size
+            %     prev_speed(j,1) = rand() * 5;
+            %     prev_speed(j,2) = rand() * 5;
+            % end
             
         end
         stuckNum = stuckNum + 1;
