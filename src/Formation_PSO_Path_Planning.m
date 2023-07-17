@@ -25,7 +25,7 @@ bf         = 0;
 af         = 1; % was 1
 backstep_when_jammed = 1.2;
 start_iteration = 20;
-path_alg = "d_star_lite";    % Options: a_star, d_star_lite, dijkstra
+path_alg = "a_star";    % Options: a_star, d_star_lite, dijkstra
 
 
 % The position of the destination
@@ -394,16 +394,18 @@ for k=1:max_iter
 
     % STOP Simulation if reached destination
     if checkpoint_index > length(checkpoints)
+        metric_iter_num = k - start_iteration;
+
         fprintf("Destination Reached\n");
         fprintf("END SIMULATION\n\n")
         fprintf("METRICS\n");
-        fprintf("Num Iterations: %d\n", k - start_iteration);
+        fprintf("Num Iterations: %d\n", metric_iter_num);
         
         distances = zeros(swarm_size, 1);
         for d=start_iteration+1:k
             for j=1:swarm_size
-                prev_coordinates = swarm_trace(k-1, j, :);
-                curr_coordinates = swarm_trace(k, j, :);
+                prev_coordinates = swarm_trace(d-1, j, :);
+                curr_coordinates = swarm_trace(d, j, :);
 
                 x = [prev_coordinates(1), prev_coordinates(2); curr_coordinates(1), curr_coordinates(2);];
                 distance = pdist(x,'euclidean');
@@ -411,7 +413,7 @@ for k=1:max_iter
             end
         end
 
-        efficiencies = distances(:) / k;
+        efficiencies = distances(:) / metric_iter_num;
         mean_dist = mean(distances);
         disp(distances);
         fprintf("Avg. Distance: %f\n", mean_dist);
@@ -565,11 +567,12 @@ for k=1:max_iter
 
         %---Average Communication Performance Indicator---%
         Jn=cat(1, Jn, phi_rij);
-        if k >= start_iteration
-            Jn_arr = [Jn_arr; Jn];
-        end
         
         Jn=smooth(Jn);
+
+        if k >= start_iteration
+            Jn_arr = [Jn_arr; phi_rij];
+        end
         set(Jn_Plot, 'xdata', t_Elapsed, 'ydata', Jn);      % Plot Jn
         set(Jn_Text, 'Position', [t_Elapsed(end), Jn(end)], 'String', sprintf('Jn: %.4f', Jn(end)));
         pause(0);

@@ -38,7 +38,6 @@ function path = aStar(start_pos, end_pos, obstacles, grid, gridStep)
 
      % Check if the start position is within an obstacle
     if grid(startX, startY) > 1
-        fprintf('Start position is within an obstacle. Value: %d\n', grid(startX, startY));
         % path = [];
         % return;
     end
