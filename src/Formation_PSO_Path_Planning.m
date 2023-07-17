@@ -25,6 +25,7 @@ bf         = 0;
 af         = 1; % was 1
 backstep_when_jammed = 1.2;
 start_iteration = 20;
+path_alg = "d_star_lite";    % Options: a_star, d_star_lite, dijkstra
 
 
 % The position of the destination
@@ -536,7 +537,15 @@ for k=1:max_iter
             grid_map = zeros(num_cells_x, num_cells_y);
 
             % Recalulate path
-            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            path =[];
+            if path_alg == "a_star"
+                path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "d_star_lite"
+                path = dStarLite(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "dijkstra"
+                path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            end
+
             if size(path) > 0
                 checkpoints = path;
                 checkpoint_index = 1;
@@ -608,7 +617,15 @@ for k=1:max_iter
         
         % Recalulate path
         if stuckNum == 0
-            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            path =[];
+            if path_alg == "a_star"
+                path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "d_star_lite"
+                path = dStarLite(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "dijkstra"
+                path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            end
+            
             if size(path) > 0
                 checkpoints = path;
                 checkpoint_index = 1;

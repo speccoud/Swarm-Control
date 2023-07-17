@@ -125,7 +125,7 @@ function h = heuristic(position, goal)
 end
 
 function coords = matrix_coordinates(row, col, gridStep)
-    coords = [(row-1) * garidStep, (col-1) * gridStep];
+    coords = [(row-1) * gridStep, (col-1) * gridStep];
 end
 
 function key = calculateKey(vertex, rhs, gScore, km)
