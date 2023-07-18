@@ -24,8 +24,8 @@ b0         = 20; % was 20
 bf         = 0;
 af         = 1; % was 1
 backstep_when_jammed = 1.2;
-start_iteration = 20;
-path_alg = "a_star";    % Options: a_star, d_star_lite, dijkstra
+start_iteration = 50;
+path_alg = "best_first_search";    % Options: a_star, jump_point_search, dijkstra, breadth_first_search, best_first_search
 
 
 
@@ -416,7 +416,7 @@ for k=1:max_iter
 
         efficiencies = distances(:) / metric_iter_num;
         mean_dist = mean(distances);
-        
+
         fprintf("Avg. Distance: %f\n", mean_dist);
         fprintf("Avg. Efficiency: %f\n", mean(efficiencies));
         fprintf("Avg. Jn: %f\n", mean(Jn_arr));
@@ -547,6 +547,10 @@ for k=1:max_iter
                 path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             elseif path_alg == "dijkstra"
                 path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "breadth_first_search"
+                path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "best_first_search"
+                path = bestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             end
 
             if size(path) > 0
@@ -628,6 +632,10 @@ for k=1:max_iter
                 path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             elseif path_alg == "dijkstra"
                 path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "breadth_first_search"
+                path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "best_first_search"
+                path = bestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             end
             
             if size(path) > 0

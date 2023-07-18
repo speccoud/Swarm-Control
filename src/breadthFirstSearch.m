@@ -1,41 +1,32 @@
-function path = breadthFirstSearch(start_pos, end_pos, obstacles)
-    gridStep = 50;
-
-    grid = zeros(10); % Initialize the matrix with zeros
-
-    for row = 1:10
-        for col = 1:10
+function path = breadthFirstSearch(start_pos, end_pos, obstacles, grid, gridStep)
+    
+    for row = 1:size(grid, 1)
+        for col = 1:size(grid, 2)
             coords = matrix_coordinates(row, col, gridStep);
             obs = findClosestObstacle(coords(1,:), obstacles);
             distance_to_obs = pdist([coords(1,1),coords(1,2); obs(1),obs(2)],'euclidean');
-            if distance_to_obs < gridStep
-                grid(row, col) = 10; % Set the value at each position
+            if distance_to_obs < 10
+                grid(row, col) = 10;
+            elseif distance_to_obs < 13
+                grid(row, col) = 5; % Set the value at each position
             else
                 grid(row, col) = 1; % Set the value at each position
             end
-            
         end
     end
-    visited = false(size(grid));
-    % Define the start and goal positions
-    startX = round(start_pos(1) / 50);
-    startY = round(start_pos(2) / 50);
-    
-    % Add a check to ensure start indices are within range
-    startX = max(1, min(startX, size(visited, 1)));
-    startY = max(1, min(startY, size(visited, 2)));
-    
-    goalX = round(end_pos(1) / 50);
-    goalY = round(end_pos(2) / 50);
-    
-    % Add a check to ensure goal indices are within range
-    goalX = max(1, min(goalX, size(visited, 1)));
-    goalY = max(1, min(goalY, size(visited, 2)));
-    fprintf("StartX: %f, ", startX)
-    fprintf("Y: %f\n", startY)
-    fprintf("End: %f, ", goalX)
-    fprintf("Y: %f\n", goalY)
 
+    % Define the start and goal positions
+    startX = round(start_pos(1) / gridStep);
+    startY = round(start_pos(2) / gridStep);
+    
+    % Check if the start position is within an obstacle
+    if grid(startX, startY) > 1
+        fprintf('Start position is within an obstacle. Value: %d\n', grid(startX, startY));
+    end
+    
+    goalX = round(end_pos(1) / gridStep);
+    goalY = round(end_pos(2) / gridStep);
+    
     start = [startX, startY];
     goal = [goalX, goalY];
     
@@ -60,6 +51,7 @@ function path = breadthFirstSearch(start_pos, end_pos, obstacles)
         
         % Define the possible moves (up, down, left, right)
         moves = [0, -1; 0, 1; -1, 0; 1, 0];
+        % moves = [0, -1; 0, 1; -1, 0; 1, 0; -1, -1; -1, 1; 1, -1; 1, 1];
         
         for i = 1:size(moves, 1)
             next = current + moves(i, :);
@@ -93,7 +85,8 @@ function path = breadthFirstSearch(start_pos, end_pos, obstacles)
         disp(indexes);
 
         % Convert path positions to 2D coordinates
-        pathCoords = path(:, 1:2) * gridStep;
+        % pathCoords = path(:, 1:2) * gridStep;
+        pathCoords = path(1:2:end, 1:2) * gridStep;
         checkpoints = [pathCoords(:, 1), pathCoords(:, 2); end_pos(1), end_pos(2)];
         
         disp('Coordinates of the cells in the path:');
@@ -108,4 +101,3 @@ end
 function coords = matrix_coordinates(row, col, gridStep)
     coords = [(row-1) * gridStep, (col-1) * gridStep];
 end
-

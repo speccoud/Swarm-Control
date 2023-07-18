@@ -1,4 +1,4 @@
-function path = jumpPointSearch(start_pos, end_pos, obstacles, grid, gridStep)
+function path = bestFirstSearch(start_pos, end_pos, obstacles, grid, gridStep)
     for row = 1:size(grid, 1)
         for col = 1:size(grid, 2)
             coords = matrix_coordinates(row, col, gridStep);
@@ -29,7 +29,7 @@ function path = jumpPointSearch(start_pos, end_pos, obstacles, grid, gridStep)
     start = [startX, startY];
     goal = [goalX, goalY];
     
-    % Perform Jump Point Search
+    % Perform Best-First Search
     visited = false(size(grid));
     parent = zeros(size(grid));
     foundGoal = false;
@@ -37,12 +37,12 @@ function path = jumpPointSearch(start_pos, end_pos, obstacles, grid, gridStep)
     % Define the possible moves (up, down, left, right, diagonal)
     moves = [0, -1; 0, 1; -1, 0; 1, 0; -1, -1; -1, 1; 1, -1; 1, 1];
     
-    % Initialize the queue with the start position
-    queue = [start];
+    % Initialize the priority queue with the start position
+    priorityQueue = PriorityQueue();
+    priorityQueue.insert(start, heuristic(start, goal));
     
-    while ~isempty(queue)
-        current = queue(1,:);
-        queue(1,:) = []; % Pop the front element
+    while ~priorityQueue.isEmpty()
+        current = priorityQueue.pop();
         
         if isequal(current, goal)
             foundGoal = true;
@@ -50,7 +50,7 @@ function path = jumpPointSearch(start_pos, end_pos, obstacles, grid, gridStep)
         end
         
         visited(current(1), current(2)) = true;
-        neighbors = getNeighbors(current, grid, moves);
+        neighbors = getNeighbors(current, grid, moves, visited);
         
         for i = 1:size(neighbors, 1)
             neighbor = neighbors(i,:);
@@ -58,14 +58,9 @@ function path = jumpPointSearch(start_pos, end_pos, obstacles, grid, gridStep)
             col = neighbor(2);
             
             if ~visited(row, col)
-                queue = [queue; neighbor]; % Enqueue the neighbor
+                priorityQueue.insert(neighbor, heuristic(neighbor, goal));
                 visited(row, col) = true;
                 parent(row, col) = sub2ind(size(grid), current(1), current(2));
-                
-                if isForced(current, neighbor, grid, moves)
-                    jumpPoint = jump(neighbor, current, goal, grid, moves);
-                    queue = [queue; jumpPoint]; % Enqueue the jump point
-                end
             end
         end
     end
@@ -73,69 +68,12 @@ function path = jumpPointSearch(start_pos, end_pos, obstacles, grid, gridStep)
     % Retrieve the path if a goal was found
     if foundGoal
         path = reconstructPath(parent, goal, start);
-        % pathCoords = path * gridStep;
         pathCoords = path(1:2:end, 1:2) * gridStep;
         checkpoints = [pathCoords(:, 1), pathCoords(:, 2); end_pos(1), end_pos(2)];
         path = checkpoints;
     else
         disp('No path found.');
         path = [];
-    end
-end
-
-function neighbors = getNeighbors(current, grid, moves)
-    neighbors = [];
-    [maxRows, maxCols] = size(grid);
-    
-    for i = 1:size(moves, 1)
-        move = moves(i,:);
-        row = current(1) + move(1);
-        col = current(2) + move(2);
-        
-        if row >= 1 && row <= maxRows && col >= 1 && col <= maxCols && grid(row, col) == 1
-            neighbors = [neighbors; [row, col]];
-        end
-    end
-end
-
-function jumpPoint = jump(current, parent, goal, grid, moves)
-    jumpPoint = current;
-    [maxRows, maxCols] = size(grid);
-    dx = current(1) - parent(1);
-    dy = current(2) - parent(2);
-    
-    if ~isequal(current, goal)
-        while true
-            % Check if the current position is the goal or blocked
-            if isGoal(current, goal)
-                jumpPoint = current;
-                return;
-            elseif ~isClear(current, grid)
-                return;
-            end
-            
-            % Diagonal forced neighbor pruning
-            if dx ~= 0 && dy ~= 0
-                if (isClear([current(1) - dx, current(2)], grid) && ~isClear([current(1) - dx, current(2) + dy], grid)) || ...
-                   (isClear([current(1), current(2) - dy], grid) && ~isClear([current(1) + dx, current(2) - dy], grid))
-                    return;
-                end
-            end
-            
-            % Next jump point in the current direction
-            next = current + [dx, dy];
-            
-            if ~isClear(next, grid)
-                return;
-            end
-            
-            % Check for forced neighbors
-            if isForced(current, next, grid, moves)
-                return;
-            end
-            
-            current = next;
-        end
     end
 end
 
@@ -192,3 +130,19 @@ end
 function coords = matrix_coordinates(row, col, gridStep)
     coords = [(row-1) * gridStep, (col-1) * gridStep];
 end
+
+function neighbors = getNeighbors(current, grid, moves, visited)
+    neighbors = [];
+    [maxRows, maxCols] = size(grid);
+    
+    for i = 1:size(moves, 1)
+        move = moves(i,:);
+        row = current(1) + move(1);
+        col = current(2) + move(2);
+        
+        if row >= 1 && row <= maxRows && col >= 1 && col <= maxCols && grid(row, col) == 1 && ~visited(row, col)
+            neighbors = [neighbors; [row, col]];
+        end
+    end
+end
+
