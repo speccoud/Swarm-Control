@@ -7,7 +7,7 @@ function path = dijkstra(start_pos, end_pos, obstacles, grid, gridStep)
             distance_to_obs = pdist([coords(1,1),coords(1,2); obs(1),obs(2)],'euclidean');
             if distance_to_obs < 10
                 grid(row, col) = 10;
-            elseif distance_to_obs < 13
+            elseif distance_to_obs < 20
                 grid(row, col) = 5; % Set the value at each position
             else
                 grid(row, col) = 1; % Set the value at each position

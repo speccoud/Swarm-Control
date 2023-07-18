@@ -25,7 +25,7 @@ bf         = 0;
 af         = 1; % was 1
 backstep_when_jammed = 1.2;
 start_iteration = 50;
-path_alg = "best_first_search";    % Options: a_star, jump_point_search, dijkstra, breadth_first_search, best_first_search
+path_alg = "breadth_first_search";    % Options: a_star, jump_point_search, breadth_first_search, dijkstra, best_first_search
 
 
 
@@ -41,11 +41,12 @@ destination_threshold = 10;
 
 % The position of the obstacle
 obs_centers = [
-    90, 90;]; % Coordinates of multiple obstacle centers
+    60, 105;
+    125, 75;]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-    35;
-    ]; % Radii of multiple obstacles
+    30;
+    35;]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
@@ -86,7 +87,7 @@ global_best_loc = [0,0];
 
 % PSO Constants
 goal_w = 1;
-obs_w = 100; % @65-80 for log scale
+obs_w = 120; % @65-80 for log scale
 curr_vel_w = 0.11;
 c1 = 0.07;
 c2 = 0.13;
