@@ -25,13 +25,21 @@ bf         = 0;
 af         = 1; % was 1
 backstep_when_jammed = 1.2;
 start_iteration = 50;
-path_alg = "breadth_first_search";    % Options: a_star, jump_point_search, breadth_first_search, dijkstra, best_first_search
 
+%%%%%% Algorithm Options %%%%%%
+% 1. a_star                   %
+% 2. jump_point_search        %
+% 3. breadth_first_search     %
+% 4. greedyBestFirstSearch    %
+% 5. dijkstra,                %
+% 6. theta_star               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+path_alg = "dStarLite";   
 
 
 % The position of the destination
-dest_x = 150;
-dest_y = 150;
+dest_x = 170;
+dest_y = 175;
 dest_pos = [dest_x, dest_y];
 
 checkpoints = [dest_x, dest_y;];
@@ -41,12 +49,16 @@ destination_threshold = 10;
 
 % The position of the obstacle
 obs_centers = [
-    60, 105;
-    125, 75;]; % Coordinates of multiple obstacle centers
+80, 85;
+133, 95;
+185, 80;
+115, 205;
+220, 175;
+]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-    30;
-    35;]; % Radii of multiple obstacles
+30; 25; 30; 25; 25;
+]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
@@ -87,7 +99,7 @@ global_best_loc = [0,0];
 
 % PSO Constants
 goal_w = 1;
-obs_w = 120; % @65-80 for log scale
+obs_w = 110; % @65-80 for log scale
 curr_vel_w = 0.11;
 c1 = 0.07;
 c2 = 0.13;
@@ -402,6 +414,8 @@ for k=1:max_iter
         fprintf("END SIMULATION\n\n")
         fprintf("METRICS\n");
         fprintf("Num Iterations: %d\n", metric_iter_num);
+        fprintf("Num Obstacles: %d\n", size(swarm_obs, 1));
+        
         
         distances = zeros(swarm_size, 1);
         for d=start_iteration+1:k
@@ -552,6 +566,8 @@ for k=1:max_iter
                 path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             elseif path_alg == "best_first_search"
                 path = bestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "greedyBestFirstSearch"
+                path = greedyBestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             end
 
             if size(path) > 0
@@ -637,6 +653,8 @@ for k=1:max_iter
                 path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             elseif path_alg == "best_first_search"
                 path = bestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+            elseif path_alg == "greedyBestFirstSearch"
+                path = greedyBestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
             end
             
             if size(path) > 0
