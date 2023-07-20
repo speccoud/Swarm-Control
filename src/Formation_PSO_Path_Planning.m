@@ -31,39 +31,38 @@ start_iteration = 50;
 % 2. jump_point_search        %
 % 3. breadth_first_search     %
 % 4. greedyBestFirstSearch    %
-% 5. dijkstra,                %
+% 5. dijkstra                 %
 % 6. theta_star               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-path_alg = "dStarLite";   
+path_alg = "greedyBestFirstSearch";   
 
 
 % The position of the destination
-dest_x = 170;
-dest_y = 175;
+dest_x = 150;
+dest_y = 150;
 dest_pos = [dest_x, dest_y];
 
 checkpoints = [dest_x, dest_y;];
 checkpoint_index = 1;
 checkpoint_threshold = 20; % Determines how close the centroid must be to complete a checkpoint
-destination_threshold = 10;
+destination_threshold = 15;
 
 % The position of the obstacle
 obs_centers = [
-80, 85;
-133, 95;
-185, 80;
-115, 205;
-220, 175;
+    60, 105; 
+125, 75;
 ]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-30; 25; 30; 25; 25;
+30; 35;
 ]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
 swarm_obs = [];
 
 stuckNum = 0;
+recalculate_path = false;
+path_found = true;
 
 %% ---Initialize Agents' Positions---
 swarm = [
@@ -118,6 +117,7 @@ grid_map = [];
 
 %% ---Performance Indicators---
 t_Elapsed = 0;
+t_at_start = 0;
 Jn        = 0;
 Jn_arr = [];
 rn        = 0;
@@ -155,7 +155,7 @@ title('Average Distance Indicator');
 hold on
 rn_Text = text(t_Elapsed(end), rn(end), sprintf('rn: %.4f', rn(end)), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
 
-drawnow                                         % Force a graphics refresh so that isn't counted in our elapsed time
+drawnow    % Force a graphics refresh so that isn't counted in our elapsed time
 
 tic
 
@@ -179,6 +179,7 @@ markersize = [3, 3];
 
 %% ---Simulation---
 for k=1:max_iter
+    recalculate_path = false;
     centroid = mean(swarm);
     centroid_path = [centroid_path; centroid(1), centroid(2)];
     if size(swarm_obs, 1) > 0
@@ -407,15 +408,16 @@ for k=1:max_iter
     axis equal;
 
     % STOP Simulation if reached destination
-    if checkpoint_index > length(checkpoints)
+    if checkpoint_index > size(checkpoints,1)
         metric_iter_num = k - start_iteration;
+        time_elasped = t_Elapsed(end) - t_at_start;
 
         fprintf("Destination Reached\n");
         fprintf("END SIMULATION\n\n")
         fprintf("METRICS\n");
         fprintf("Num Iterations: %d\n", metric_iter_num);
+        fprintf("Time Elasped: %f\n", time_elasped);
         fprintf("Num Obstacles: %d\n", size(swarm_obs, 1));
-        
         
         distances = zeros(swarm_size, 1);
         for d=start_iteration+1:k
@@ -429,11 +431,10 @@ for k=1:max_iter
             end
         end
 
-        efficiencies = distances(:) / metric_iter_num;
-        mean_dist = mean(distances);
+        speeds = distances(:) / time_elasped;
 
-        fprintf("Avg. Distance: %f\n", mean_dist);
-        fprintf("Avg. Efficiency: %f\n", mean(efficiencies));
+        fprintf("Avg. Distance: %f\n", mean(distances));
+        fprintf("Avg. Speed: %f\n", mean(speeds));
         fprintf("Avg. Jn: %f\n", mean(Jn_arr));
         return;
     end
@@ -484,6 +485,10 @@ for k=1:max_iter
 
         % PSO Controller
         if k >= start_iteration
+            if t_at_start == 0
+                t_at_start = t_Elapsed(end);
+            end
+
             for l=1:swarm_size
                 X = [checkpoints(checkpoint_index, 1),checkpoints(checkpoint_index, 2); swarm(l, 1),swarm(l, 2)];
                 distance_to_goal = pdist(X,'euclidean');
@@ -554,27 +559,7 @@ for k=1:max_iter
             % Initialize the matrix with zeros
             grid_map = zeros(num_cells_x, num_cells_y);
 
-            % Recalulate path
-            path =[];
-            if path_alg == "a_star"
-                path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "jump_point_search"
-                path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "dijkstra"
-                path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "breadth_first_search"
-                path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "best_first_search"
-                path = bestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "greedyBestFirstSearch"
-                path = greedyBestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            end
-
-            if size(path) > 0
-                checkpoints = path;
-                checkpoint_index = 1;
-            end
-            
+            recalculate_path = true;
         end
 
         % Update Agent positions
@@ -638,53 +623,52 @@ for k=1:max_iter
     end
 
     dist_to_gbest = norm([global_best_loc(1, 1) - centroid(1), global_best_loc(1, 2) - centroid(2)]);
-    if dist_to_gbest < 5 && size(checkpoints,1) > 1
+    if dist_to_gbest < 5
         
         % Recalulate path
         if stuckNum == 0
-            path =[];
-            if path_alg == "a_star"
-                path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "jump_point_search"
-                path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "dijkstra"
-                path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "breadth_first_search"
-                path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "best_first_search"
-                path = bestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            elseif path_alg == "greedyBestFirstSearch"
-                path = greedyBestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
-            end
-            
-            if size(path) > 0
-                checkpoints = path;
-                checkpoint_index = 1;
-                global_best_value = 10000;
-                personal_best_values = ones(swarm_size) * 10000;
-            end
-            fprintf("Recalulate path cause stuck\n", mean(prev_speed))
+            recalculate_path = true;
         end
         
-        
-        if mod(stuckNum, 5) == 0 && checkpoint_index < size(checkpoints,1)
-            fprintf("Update checkpoint cause stuck, stuck num: %d\n", stuckNum)
-            checkpoint_index = checkpoint_index + 1;
-            global_best_value = 10000;
-            personal_best_values = ones(swarm_size) * 10000;
-            goal_w = 10;
-            % for j = 1:swarm_size
-            %     prev_speed(j,1) = rand() * 5;
-            %     prev_speed(j,2) = rand() * 5;
-            % end
-            
-        end
         stuckNum = stuckNum + 1;
     
-        
     else
         stuckNum = 0;
-        goal_w = 1;
+    end
+
+    if ~path_found
+        recalculate_path = true;
+    end
+
+    if recalculate_path
+        path =[];
+        if path_alg == "a_star"
+            path = aStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+        elseif path_alg == "jump_point_search"
+            path = jumpPointSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+        elseif path_alg == "dijkstra"
+            path = dijkstra(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+        elseif path_alg == "breadth_first_search"
+            path = breadthFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+        elseif path_alg == "theta_star"
+            path = thetaStar(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+        elseif path_alg == "greedyBestFirstSearch"
+            path = greedyBestFirstSearch(mean(swarm), [dest_x dest_y], swarm_obs, grid_map, grid_step);
+        end
+        
+        if size(path) > 0
+            checkpoints = path;
+            checkpoint_index = 1;
+            path_found = true;
+        else
+            checkpoints = [dest_x, dest_y;];
+            checkpoint_index = 1;
+            path_found = false;
+        end
+
+        global_best_value = 10000;
+        personal_best_values = ones(swarm_size) * 10000;
+        fprintf("Recalulate path\n")
     end
 
     

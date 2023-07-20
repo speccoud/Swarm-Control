@@ -5,9 +5,9 @@ function path = breadthFirstSearch(start_pos, end_pos, obstacles, grid, gridStep
             coords = matrix_coordinates(row, col, gridStep);
             obs = findClosestObstacle(coords(1,:), obstacles);
             distance_to_obs = pdist([coords(1,1),coords(1,2); obs(1),obs(2)],'euclidean');
-            if distance_to_obs < 10
+            if distance_to_obs < 15
                 grid(row, col) = 10;
-            elseif distance_to_obs < 20
+            elseif distance_to_obs < 25
                 grid(row, col) = 5; % Set the value at each position
             else
                 grid(row, col) = 1; % Set the value at each position
