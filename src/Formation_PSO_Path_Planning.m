@@ -34,7 +34,7 @@ start_iteration = 50;
 % 5. dijkstra                 %
 % 6. theta_star               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-path_alg = "greedyBestFirstSearch";   
+path_alg = "a_star";   
 
 
 % The position of the destination
@@ -50,7 +50,7 @@ destination_threshold = 15;
 % The position of the obstacle
 obs_centers = [
     60, 105; 
-125, 75;
+    125, 75;
 ]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
