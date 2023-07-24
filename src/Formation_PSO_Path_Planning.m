@@ -38,8 +38,8 @@ path_alg = "a_star";
 
 
 % The position of the destination
-dest_x = 150;
-dest_y = 150;
+dest_x = 165;
+dest_y = 175;
 dest_pos = [dest_x, dest_y];
 
 checkpoints = [dest_x, dest_y;];
@@ -49,12 +49,15 @@ destination_threshold = 15;
 
 % The position of the obstacle
 obs_centers = [
-    60, 105; 
-    125, 75;
+    80, 85;
+    133, 95;
+    185, 80;
+    115, 205;
+    220, 175;
 ]; % Coordinates of multiple obstacle centers
 
 obs_radii = [
-30; 35;
+30; 25; 30; 25; 25;
 ]; % Radii of multiple obstacles
 
 avoid_directions = zeros(swarm_size);
