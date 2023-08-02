@@ -233,14 +233,15 @@ for k=1:max_iter
         
         
         % Plot the centroid path as a yellow line
-        plot(centroid_path(:, 1), centroid_path(:, 2), 'Color', 'y', 'LineWidth', 2);
-        checkpoint_legend = plot(NaN, NaN, 's', 'MarkerEdgeColor', 'k', 'LineWidth', 2);
-        destination_handles = plot(NaN, NaN, 's', 'MarkerEdgeColor', 'magenta', 'LineWidth', 2);
+        plot(centroid_path(:, 1), centroid_path(:, 2), 'Color', 'y', 'LineWidth', 2, 'MarkerSize', 10);
+        checkpoint_legend = plot(NaN, NaN, 's', 'MarkerEdgeColor', 'k', 'LineWidth', 2, 'MarkerSize', 10);
+        destination_handles = plot(NaN, NaN, 's', 'MarkerEdgeColor', 'magenta', 'LineWidth', 2, 'MarkerSize', 10);
         path_legend = plot(NaN, NaN, 'y', 'LineWidth', 2);
         
         % Add a legend
         lgd = legend([agent_handles, obstacle_handles, checkpoint_legend, destination_handles, path_legend], 'Swarm Centroid', 'Jam Location', 'Checkpoints', 'Destination', 'Centroid Path');
-        lgd.Location = 'eastoutside';
+        lgd.Location = 'northwest';
+        lgd.FontSize = 15;
 
         % Adjust the figure size to accommodate the legend
         pos = get(gcf, 'Position');
