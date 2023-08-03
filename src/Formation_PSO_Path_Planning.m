@@ -125,10 +125,10 @@ Jn        = 0;
 Jn_arr = [];
 rn        = 0;
 
-%% ---Initialize video--- %%
-myVideo = VideoWriter('Simulation.avi');
-myVideo.FrameRate = 24;
-open(myVideo)
+% %% ---Initialize video--- %%
+% myVideo = VideoWriter('Simulation2', 'MPEG-4');
+% myVideo.FrameRate = 5;
+% open(myVideo);
 
 % Define the figure positions
 figure_positions = [
@@ -252,6 +252,9 @@ for k=1:max_iter
         pos = get(gcf, 'Position');
         pos(3) = pos(3) + 100; % Increase the width to accommodate the legend
         % set(gcf, 'Position', figure_positions(5, :));
+
+        % frame = getframe(gcf);
+        % writeVideo(myVideo, frame);
     end
 
     % Plot the node trace inside the loop
@@ -371,10 +374,6 @@ for k=1:max_iter
 
         imagesc([x_low x_high], [y_low y_high], img, 'AlphaData', alphachannel, 'CData', repmat(reshape(node_colors(l, :), [1 1 3]), [size(img, 1), size(img, 2), 1]));
     end
-
-    frame = getframe(gcf);
-    writeVideo(myVideo, frame);
-
 
     %--- Formation Scene Edge+Label ---
     for i = 1:swarm_size
@@ -703,4 +702,4 @@ for i = 1:swarm_size
 end
 hold off;
 
-close(myVideo);
+% close(myVideo);
