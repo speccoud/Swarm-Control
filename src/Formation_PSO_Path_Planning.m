@@ -125,6 +125,11 @@ Jn        = 0;
 Jn_arr = [];
 rn        = 0;
 
+%% ---Initialize video--- %%
+myVideo = VideoWriter('Simulation.avi');
+myVideo.FrameRate = 24;
+open(myVideo)
+
 % Define the figure positions
 figure_positions = [
     %Left Bottom Right Width Height
@@ -367,6 +372,9 @@ for k=1:max_iter
         imagesc([x_low x_high], [y_low y_high], img, 'AlphaData', alphachannel, 'CData', repmat(reshape(node_colors(l, :), [1 1 3]), [size(img, 1), size(img, 2), 1]));
     end
 
+    frame = getframe(gcf);
+    writeVideo(myVideo, frame);
+
 
     %--- Formation Scene Edge+Label ---
     for i = 1:swarm_size
@@ -594,8 +602,7 @@ for k=1:max_iter
         set(rn_Plot, 'xdata', t_Elapsed, 'ydata', rn);      % Plot rn
         set(rn_Text, 'Position', [t_Elapsed(end), rn(end)], 'String', sprintf('rn: %.4f', rn(end)));
 
-        pause(0);
-
+        pause(0); 
     end
 
     % Update checkpoint
@@ -695,3 +702,5 @@ for i = 1:swarm_size
     plot(trace_x, trace_y);
 end
 hold off;
+
+close(myVideo);
