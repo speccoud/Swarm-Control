@@ -105,6 +105,8 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
   </tr>
 </table>
 
+<video src='/src/Vid_Grid.mp4' width=500/>
+
 <!-- <h2 align="center">BibTeX Citation</h2>
 
 ```
