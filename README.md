@@ -20,7 +20,7 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
     </td>
     <td align="center">
           <a href="https://github.com/sjpeccoud/Swarm-Control/tree/main/lib/Presentation.pdf"><img src="/lib/README.assets/Presentation.png" /></a>
-          <a href="https://github.com/sjpeccoud/Swarm-Control/tree/main/lib/Presentation.pdf"><img src="https://img.shields.io/badge/View%20More-282c34?style=for-the-badge&logoColor=white" width="100" /></a>
+          <a href="https://github.com/sjpeccoud/Swarm-Control/blob/main/lib/Presentation.pdf"><img src="https://img.shields.io/badge/View%20More-282c34?style=for-the-badge&logoColor=white" width="100" /></a>
     </td>
   </tr>
 </table>
