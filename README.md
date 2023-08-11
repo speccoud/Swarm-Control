@@ -49,35 +49,12 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
 <h3>Final Simulation</h3>
 <table>
   <tr align="center">
-    <td><img src="/lib/README.assets/Simulation.fig/Sim1.png" width=500 /></td>
-    <td><img src="/lib/README.assets/Simulation.fig/Sim2.png" width=500 /></td>
-    <td><img src="/lib/README.assets/Simulation.fig/Sim3.png" width=500 /></td>
-  </tr>
-  <tr align="center">
-    <td>No Jam Points</td>
-    <td>1 Jam Point</td>
-    <td>2 Jam Points</td>
-  </tr>
-  <tr align="center">
-    <td><img src="/lib/README.assets/Simulation.fig/Sim4.png" width=500 /></td>
-    <td><img src="/lib/README.assets/Simulation.fig/Sim5.png" width=500 /></td>
-    <td><img src="/lib/README.assets/Simulation.fig/Sim6.png" width=500 /></td>
-  </tr>
-  <tr align="center">
-    <td>After 2 Jam Points</td>
-    <td>4 Jam Points</td>
-    <td>8 Jam Points</td>
-  </tr>
-</table>
-
-<table>
-  <tr align="center">
     <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/ed35356b-23c0-4a76-bec4-c33b56b0f366' width=500/></video></td>
     <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/43f56d45-beb3-4f8d-b072-119de223aa14' width=500/></video></td>
   </tr>
   <tr align="center">
-    <td>Grid Map</td>
-    <td>Trajectory</td>
+    <td>Path Planning Grid Map</td>
+    <td>Swarm Trajectory</td>
   </tr>
 </table>
 
@@ -104,13 +81,7 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
     <td>Theta*</td>
   </tr>
 </table>
-
-
-
-
-
-
-
+</div>
 
 <!-- <h2 align="center">BibTeX Citation</h2>
 
