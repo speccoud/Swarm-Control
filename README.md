@@ -72,8 +72,8 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
 
 <table>
   <tr align="center">
-    <td><img src="/lib/README.assets/Simulation.fig/Sim_grid.png" width=500 /></td>
-    <td><img src="/lib/README.assets/Simulation.fig/Sim_trace.png" width=500 /></td>
+    <td><img src="/lib/README.assets/Simulation.fig/Sim_Grid.png" width=500 /></td>
+    <td><img src="/lib/README.assets/Simulation.fig/Sim_Trace.png" width=500 /></td>
   </tr>
   <tr align="center">
     <td>Grid Map</td>
