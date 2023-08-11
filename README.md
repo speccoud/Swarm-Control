@@ -72,8 +72,8 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
 
 <table>
   <tr align="center">
-    <td><img src="/lib/README.assets/Simulation.fig/Sim_Grid.png" width=500 /></td>
-    <td><img src="/lib/README.assets/Simulation.fig/Sim_Trace.png" width=500 /></td>
+    <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/ed35356b-23c0-4a76-bec4-c33b56b0f366' width=500/></video></td>
+    <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/43f56d45-beb3-4f8d-b072-119de223aa14' width=500/></video></td>
   </tr>
   <tr align="center">
     <td>Grid Map</td>
@@ -105,7 +105,12 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
   </tr>
 </table>
 
-<video src='/src/Vid_Grid.mp4' width=500/>
+
+
+
+
+
+
 
 <!-- <h2 align="center">BibTeX Citation</h2>
 
