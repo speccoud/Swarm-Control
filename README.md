@@ -49,8 +49,8 @@ Swarm robotics has emerged as an innovative field, enabling groups of agents to 
 <h3>Final Simulation</h3>
 <table>
   <tr align="center">
-    <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/ed35356b-23c0-4a76-bec4-c33b56b0f366' width=500/></video></td>
-    <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/43f56d45-beb3-4f8d-b072-119de223aa14' width=500/></video></td>
+    <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/2751e5d0-4363-462c-81cb-5e2bfbda2558' width=500/></video></td>
+    <td><video src='https://github.com/sjpeccoud/Swarm-Control/assets/97267956/d0d14695-6f19-4eba-90ae-aa3ed953f745' width=500/></video></td>
   </tr>
   <tr align="center">
     <td>Path Planning Grid Map</td>
